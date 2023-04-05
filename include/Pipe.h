@@ -12,13 +12,13 @@ private:
 	int mSpriteWidth, mSpriteHeight;
 	bool mIsMoving;
 	bool mIsMovingDown;
-	//SDL_Renderer* mRenderer;
 public:
 	Pipe();
 
 	Pipe(SDL_Renderer* renderer, std::string path, int w, int h);
 
-	GameObject& GetPipe();
+	GameObject& GetPipeUp();
+	GameObject& GetPipeDown();
 
 	void SetDimension(int w, int h);
 

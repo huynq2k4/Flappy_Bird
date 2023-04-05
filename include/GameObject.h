@@ -31,6 +31,8 @@ public:
 
 	//Retrieve textured rectangle from object
 	TexturedRectangle& GetTexturedRectangle();
+
+	SDL_bool IsColliding(GameObject& obj);
 };
 
 

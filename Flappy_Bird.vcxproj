@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\Bird.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\Ground.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Pipe.cpp" />
     <ClCompile Include="src\SDLApp.cpp" />
@@ -29,6 +30,7 @@
   <ItemGroup>
     <ClInclude Include="include\Bird.h" />
     <ClInclude Include="include\GameObject.h" />
+    <ClInclude Include="include\Ground.h" />
     <ClInclude Include="include\Pipe.h" />
     <ClInclude Include="include\SDLApp.h" />
     <ClInclude Include="include\TexturedRectangle.h" />

@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "Bird.h"
 #include "Pipe.h"
+#include "Ground.h"
 #include <vector>
 
 const int SCREEN_HEIGHT = 720;
@@ -23,10 +24,12 @@ SDLApp* app;
 
 GameObject* background;
 Bird* flappyBird;
-GameObject* ground;
+Ground* ground;
 vector<Pipe*> pipe(TOTAL_PIPE + 1);
 
 bool startGame = false; //check if the game is started or not
+
+bool resetGame = true;
 
 //Check if a key is holding or not
 //to avoid continually holding a key so that the bird is flying high faster
@@ -49,15 +52,24 @@ void HandleEvents() {
 		}
 		bool isFlying = false;
 
+		if (event.key.keysym.sym == SDLK_s) {
+			if (!resetGame) {
+				resetGame = true;
+				flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
+				for (int i = 0; i < TOTAL_PIPE + 1; i++) {
+					pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
+					pipe[i]->SetMode();
+				}
+			}
+		}
 		
 		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
-			if (!startGame) {
+			if (!startGame && resetGame) {
 				startGame = true;
-				flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
+				resetGame = false;
+				
 			}
-
-
-			if (!holdKey) {
+			if (!holdKey && startGame) {
 				isFlying = true;
 				flappyBird->Fly(DEFAULT_SPEED_FLY, DEFAULT_ANGLE);
 				frame = 0;
@@ -65,10 +77,13 @@ void HandleEvents() {
 				repeatFly = false;
 
 			}
+
+			
 		}
 		if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_SPACE) {
 			holdKey = false;
 		}
+		
 	}
 }
 
@@ -76,47 +91,79 @@ void HandleRendering() {
 
 	background->Render();
 
-	
-	if (startGame) {
-		if(flappyBird->GetY() < 5 * SCREEN_HEIGHT / 6 - 52){
-			flappyBird->FreeFall(0.5, 0.1);
-		}
-		else {
-			flappyBird->StopOnGround(5 * SCREEN_HEIGHT / 6 - 52);
-			startGame = false;
-		}
-	}
-
+	static int scrollingGround = 0;
 	const int speed = 4;
 
-	++frame;
-	if (frame / speed >= NUMBER_OF_FRAME && !repeatFly) {
-		frame = speed;
-		repeatFly = true;
+	if (resetGame) {
+		srand((unsigned int)time(NULL));
+		++frame;
+		if (frame / speed >= NUMBER_OF_FRAME) {
+			frame = 0;
+		}
+		scrollingGround -= SPEED_SCREEN;
+		if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
 	}
-	else if (repeatFly) {
-		frame = speed;
-	}
+	else {
+		if (startGame) {
+			if (flappyBird->GetY() < 5 * SCREEN_HEIGHT / 6 - 52) {
+				flappyBird->FreeFall(0.5, 0.1);
+			}
+			else {
+				flappyBird->StopOnGround(5 * SCREEN_HEIGHT / 6 - 52);
+				startGame = false;
+			}
+			++frame;
+			if (frame / speed >= NUMBER_OF_FRAME && !repeatFly) {
+				frame = speed;
+				repeatFly = true;
+			}
+			else if (repeatFly) {
+				frame = speed;
+			}
 
+			//flappyBird->Render();
+
+			for (int i = 0; i < TOTAL_PIPE + 1; i++) {
+				pipe[i]->MoveHorizontal(SPEED_SCREEN);
+				pipe[i]->Render();
+
+				//If pipe moves out of screen, reset normal status and pipe mode
+				if (pipe[i]->GetPipeX() < -(pipe[i]->GetPipeWidth())) {
+					pipe[i]->SetStatus(SCREEN_WIDTH + SCREEN_WIDTH / TOTAL_PIPE - pipe[i]->GetPipeWidth(), MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
+					pipe[i]->SetMode();
+				}
+				if (pipe[i]->IsMoving()) {
+					if (pipe[i]->GetPipeY() < MIN_PIPE_HEIGHT) pipe[i]->SetMoveDown(true);
+					else if (pipe[i]->GetPipeY() > MAX_PIPE_HEIGHT) pipe[i]->SetMoveDown(false);
+					pipe[i]->MoveVertical(SPEED_SCREEN - 2, pipe[i]->IsMovingDown());
+				}
+
+				if (flappyBird->IsColliding(pipe[i]->GetPipeUp()) == SDL_TRUE || flappyBird->IsColliding(pipe[i]->GetPipeDown()) == SDL_TRUE) {
+					startGame = false;
+				}
+
+			}
+
+			scrollingGround -= SPEED_SCREEN;
+			if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
+		}
+		else {
+			if (flappyBird->GetY() < 5 * SCREEN_HEIGHT / 6 - 52) {
+				flappyBird->FreeFall(0.5, 0.1);
+			}
+			else {
+				flappyBird->StopOnGround(5 * SCREEN_HEIGHT / 6 - 52);
+			}
+			for (int i = 0; i < TOTAL_PIPE + 1; i++) {
+				pipe[i]->Render();
+			}
+
+		}
+	}
+	
 	flappyBird->DrawFrame(frame, speed);
 	flappyBird->Render();
 
-	for (int i = 0; i < TOTAL_PIPE + 1; i++) {
-		pipe[i]->MoveHorizontal(SPEED_SCREEN);
-		pipe[i]->Render();
-		if (pipe[i]->GetPipeX() < -(pipe[i]->GetPipeWidth())) {
-			pipe[i]->SetStatus(SCREEN_WIDTH + SCREEN_WIDTH / TOTAL_PIPE - pipe[i]->GetPipeWidth(), MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
-			pipe[i]->SetMode();
-		}
-		if (pipe[i]->IsMoving()) {
-			if (pipe[i]->GetPipeY() < MIN_PIPE_HEIGHT) pipe[i]->SetMoveDown(true);
-			else if (pipe[i]->GetPipeY() > MAX_PIPE_HEIGHT) pipe[i]->SetMoveDown(false);
-			pipe[i]->MoveVertical(SPEED_SCREEN - 2, pipe[i]->IsMovingDown());
-		}
-		
-	}
-
-	static int scrollingGround = 0;
 	ground->GetTexturedRectangle().SetPosition(scrollingGround, 5 * SCREEN_HEIGHT / 6);
 	ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
 	ground->Render();
@@ -125,22 +172,23 @@ void HandleRendering() {
 	ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
 	ground->Render();
 
-	scrollingGround -= SPEED_SCREEN;
-	if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
+
 
 
 }
 
 int main(int argc, char* args[]) {
 
+	srand((unsigned int)time(NULL));
+
 	//Setup the SDLApp
 	const char* title = "Flappy Bird";
 	app = new SDLApp(IMG_INIT_PNG, title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	//Create objects
+	//Create objects and set up default properties
 	background = new GameObject(app->GetRenderer(), "asset/image/background.png");
 	flappyBird = new Bird(app->GetRenderer(), "asset/image/flappy-bird.png");
-	ground = new GameObject(app->GetRenderer(), "asset/image/base.png");
+	ground = new Ground(app->GetRenderer(), "asset/image/base.png");
 	
 
 	for (int i = 0; i < TOTAL_PIPE + 1; i++) {
@@ -156,10 +204,15 @@ int main(int argc, char* args[]) {
 	flappyBird->GetTexturedRectangle().SetDimension(72, 61);
 	flappyBird->SetDefaultFrame(0, 0, SPRITE_WIDTH / NUMBER_OF_FRAME, SPRITE_HEIGHT);
 
+	
 
+	
+
+	//Handle events and rendering
 	app->SetEventCallback(HandleEvents);
 	app->SetRenderCallback(HandleRendering);
 
+	//Game loop
 	app->RunAppLoop();
 
 	//Clean up our app

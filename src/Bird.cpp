@@ -50,3 +50,5 @@ void Bird::StopOnGround(double posY)
 {
 	GetTexturedRectangle().SetPosition(GetX(), posY);
 }
+
+

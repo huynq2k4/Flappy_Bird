@@ -59,3 +59,8 @@ TexturedRectangle& GameObject::GetTexturedRectangle()
 {
 	return *mSprite;
 }
+
+SDL_bool GameObject::IsColliding(GameObject& obj)
+{
+	return GetTexturedRectangle().IsColliding(obj.GetTexturedRectangle());
+}

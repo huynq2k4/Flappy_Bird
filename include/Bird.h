@@ -27,7 +27,7 @@ public:
 	void FreeFall(double accelerationFly, double accelerationRotate);
 	void StopOnGround(double posY);
 
-	SDL_bool IsColliding(GameObject obj);
+
 };
 
 

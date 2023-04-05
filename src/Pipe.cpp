@@ -29,9 +29,14 @@ Pipe::Pipe(SDL_Renderer* renderer, std::string path, int w, int h)
 
 }
 
-GameObject& Pipe::GetPipe()
+GameObject& Pipe::GetPipeUp()
 {
-	return *(mPipe.second);
+	return *mPipeHigh;
+}
+
+GameObject& Pipe::GetPipeDown()
+{
+	return *mPipeLow;
 }
 
 
@@ -44,6 +49,7 @@ void Pipe::SetDimension(int w, int h) {
 
 void Pipe::SetStatus(int posX, int posYMax, int posYMin, int distance)
 {
+	
 	mPipeLow->GetTexturedRectangle().SetPosition(posX, rand() % (posYMax - posYMin + 1) + posYMin);
 	mPipeHigh->GetTexturedRectangle().SetPosition(posX, mPipeLow->GetY() - distance - mSpriteHeight);
 }
