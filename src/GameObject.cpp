@@ -29,6 +29,23 @@ void GameObject::Update()
 {
 }
 
+double GameObject::GetX()
+{
+	return mSprite->GetX();
+}
+
+double GameObject::GetY()
+{
+	return mSprite->GetY();
+}
+
+double GameObject::GetAngle()
+{
+	return mSprite->GetAngle();
+}
+
+
+
 //Render object
 void GameObject::Render()
 {

@@ -2,6 +2,7 @@
 #define TEXTURED_RECTANGLE_H
 
 #include <SDL.h>
+#include <SDL_image.h>
 #include <string>
 
 
@@ -42,11 +43,20 @@ public:
 	//Set image flipping
 	void SetFlip(SDL_RendererFlip flip);
 
+	//Get x-coordinate
+	double GetX();
+
+	//Get y-coordinate
+	double GetY();
+
 	//Get texture width
 	int GetWidth();
 
 	//Get texture height
 	int GetHeight();
+
+	//Get texture angle
+	double GetAngle();
 
 	//Render texture
 	void Render(SDL_Renderer* renderer);

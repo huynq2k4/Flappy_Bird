@@ -19,6 +19,12 @@ public:
 	//Update properties
 	void Update();
 
+	//Get coordinate
+	double GetX();
+	double GetY();
+
+	//Get angle
+	double GetAngle();
 
 	//Render object
 	void Render();

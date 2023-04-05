@@ -1,27 +1,30 @@
 #include "SDLApp.h"
-#include "ResourceManager.h"
 #include "TexturedRectangle.h"
 #include "GameObject.h"
 #include "Bird.h"
+#include "Pipe.h"
+#include <vector>
 
 const int SCREEN_HEIGHT = 720;
 const int SCREEN_WIDTH = 1280;
 const int DEFAULT_SPEED_FLY = -8;
 const double DEFAULT_ANGLE = -30;
+const int NUMBER_OF_FRAME = 4;
+const int SPRITE_HEIGHT = 610;
+const int SPRITE_WIDTH = 2868;
+const int TOTAL_PIPE = 4;
+const int SPEED_SCREEN = 3;
+const int MAX_PIPE_HEIGHT = 550;
+const int MIN_PIPE_HEIGHT = 250;
+const int PIPE_DISTANCE = 175;
+
 
 SDLApp* app;
 
 GameObject* background;
 Bird* flappyBird;
 GameObject* ground;
-GameObject* pipe;
-
-
-
-double posY = 5 * SCREEN_HEIGHT / 12;
-double velFly = 0;
-double angle = 0;
-double velTurn = 0;
+vector<Pipe*> pipe(TOTAL_PIPE + 1);
 
 bool startGame = false; //check if the game is started or not
 
@@ -29,10 +32,11 @@ bool startGame = false; //check if the game is started or not
 //to avoid continually holding a key so that the bird is flying high faster
 bool holdKey = false;
 
-int frame = 0;
 
 //Make sure the bird flaps wing only when it flys (space keydown)
 bool repeatFly = false;
+
+int frame = 0;
 
 
 void HandleEvents() {
@@ -48,22 +52,14 @@ void HandleEvents() {
 		
 		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
 			if (!startGame) {
-
 				startGame = true;
-				posY = 5 * SCREEN_HEIGHT / 12;
-				angle = 0;
-				velFly = 0;
-				velTurn = 0;
-
+				flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
 			}
 
 
 			if (!holdKey) {
 				isFlying = true;
-				velFly = DEFAULT_SPEED_FLY;
-
-				angle = DEFAULT_ANGLE;
-				velTurn = 0;
+				flappyBird->Fly(DEFAULT_SPEED_FLY, DEFAULT_ANGLE);
 				frame = 0;
 				holdKey = true;
 				repeatFly = false;
@@ -72,83 +68,53 @@ void HandleEvents() {
 		}
 		if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_SPACE) {
 			holdKey = false;
-			
 		}
-		
-
-
-		
 	}
 }
 
 void HandleRendering() {
-	background->GetTexturedRectangle().SetPosition(0, 0);
-	background->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT);
+
 	background->Render();
 
+	
 	if (startGame) {
-		if (posY < 5 * SCREEN_HEIGHT / 6 - 52) {
-			posY += velFly + 0.5;
-			velFly += 0.5;
-
-
-			angle += velTurn + 0.1;
-			velTurn += 0.1;
-
-			if (angle >= 90) angle = 90;
+		if(flappyBird->GetY() < 5 * SCREEN_HEIGHT / 6 - 52){
+			flappyBird->FreeFall(0.5, 0.1);
 		}
 		else {
-			posY = 5 * SCREEN_HEIGHT / 6 - 52;
+			flappyBird->StopOnGround(5 * SCREEN_HEIGHT / 6 - 52);
 			startGame = false;
 		}
 	}
 
-	SDL_Rect clip;
-	clip.x = 2868 / 4 * (int)(frame / 4);
-	clip.y = 0;
-	clip.w = 2868 / 4;
-	clip.h = 610;
+	const int speed = 4;
 
 	++frame;
-	if (frame / 4 > 3 && !repeatFly) {
-		frame = 4;
+	if (frame / speed >= NUMBER_OF_FRAME && !repeatFly) {
+		frame = speed;
 		repeatFly = true;
 	}
 	else if (repeatFly) {
-		frame = 4;
+		frame = speed;
 	}
 
-	flappyBird->GetTexturedRectangle().SetPosition(SCREEN_WIDTH / 5, posY);
-	flappyBird->GetTexturedRectangle().SetDimension(72, 61);
-	flappyBird->GetTexturedRectangle().SetAngle(angle);
-	flappyBird->GetTexturedRectangle().SetClip(&clip);
+	flappyBird->DrawFrame(frame, speed);
 	flappyBird->Render();
 
-	static int movingPipeX = SCREEN_WIDTH;
-	static int movingPipeY = 5 * SCREEN_HEIGHT / 6 - 200;
-	std::cout << movingPipeY << endl;
-	pipe->GetTexturedRectangle().SetPosition(movingPipeX, movingPipeY);
-	pipe->GetTexturedRectangle().SetDimension(104, 640);
-	pipe->GetTexturedRectangle().SetFlip(SDL_FLIP_NONE);
-	pipe->Render();
-
-	pipe->GetTexturedRectangle().SetPosition(movingPipeX, movingPipeY - 800);
-	pipe->GetTexturedRectangle().SetDimension(104, 640);
-	pipe->GetTexturedRectangle().SetFlip(SDL_FLIP_VERTICAL);
-	pipe->Render();
-
-
-	movingPipeX -= 3;
-	if (movingPipeX < -(pipe->GetTexturedRectangle().GetWidth())) {
-		movingPipeX = SCREEN_WIDTH;
-		movingPipeY = 5 * SCREEN_HEIGHT / 6 - 200;
+	for (int i = 0; i < TOTAL_PIPE + 1; i++) {
+		pipe[i]->MoveHorizontal(SPEED_SCREEN);
+		pipe[i]->Render();
+		if (pipe[i]->GetPipeX() < -(pipe[i]->GetPipeWidth())) {
+			pipe[i]->SetStatus(SCREEN_WIDTH + SCREEN_WIDTH / TOTAL_PIPE - pipe[i]->GetPipeWidth(), MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
+			pipe[i]->SetMode();
+		}
+		if (pipe[i]->IsMoving()) {
+			if (pipe[i]->GetPipeY() < MIN_PIPE_HEIGHT) pipe[i]->SetMoveDown(true);
+			else if (pipe[i]->GetPipeY() > MAX_PIPE_HEIGHT) pipe[i]->SetMoveDown(false);
+			pipe[i]->MoveVertical(SPEED_SCREEN - 2, pipe[i]->IsMovingDown());
+		}
+		
 	}
-
-	static bool goDown = false;
-	if (movingPipeY < 300) goDown = true;
-	else if (movingPipeY > 5 * SCREEN_HEIGHT / 6 - 150) goDown = false;
-	if (goDown) movingPipeY += 2;
-	else movingPipeY -= 2;
 
 	static int scrollingGround = 0;
 	ground->GetTexturedRectangle().SetPosition(scrollingGround, 5 * SCREEN_HEIGHT / 6);
@@ -159,7 +125,7 @@ void HandleRendering() {
 	ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
 	ground->Render();
 
-	scrollingGround -= 3;
+	scrollingGround -= SPEED_SCREEN;
 	if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
 
 
@@ -175,7 +141,21 @@ int main(int argc, char* args[]) {
 	background = new GameObject(app->GetRenderer(), "asset/image/background.png");
 	flappyBird = new Bird(app->GetRenderer(), "asset/image/flappy-bird.png");
 	ground = new GameObject(app->GetRenderer(), "asset/image/base.png");
-	pipe = new GameObject(app->GetRenderer(), "asset/image/pipe-green.png");
+	
+
+	for (int i = 0; i < TOTAL_PIPE + 1; i++) {
+		pipe[i] = new Pipe(app->GetRenderer(), "asset/image/pipe-green.png", 104, 640);
+		pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
+		pipe[i]->SetMode();
+	}
+
+	background->GetTexturedRectangle().SetPosition(0, 0);
+	background->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
+	flappyBird->GetTexturedRectangle().SetDimension(72, 61);
+	flappyBird->SetDefaultFrame(0, 0, SPRITE_WIDTH / NUMBER_OF_FRAME, SPRITE_HEIGHT);
+
 
 	app->SetEventCallback(HandleEvents);
 	app->SetRenderCallback(HandleRendering);
@@ -187,6 +167,8 @@ int main(int argc, char* args[]) {
 	delete background;
 	delete flappyBird;
 	delete ground;
-	delete pipe;
+	for (int i = 0; i < TOTAL_PIPE + 1; i++) {
+		delete pipe[i];
+	}
 	return 0;
 }

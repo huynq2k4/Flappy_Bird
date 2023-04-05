@@ -22,14 +22,14 @@
     <ClCompile Include="src\Bird.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\ResourceManager.cpp" />
+    <ClCompile Include="src\Pipe.cpp" />
     <ClCompile Include="src\SDLApp.cpp" />
     <ClCompile Include="src\TexturedRectangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Bird.h" />
     <ClInclude Include="include\GameObject.h" />
-    <ClInclude Include="include\ResourceManager.h" />
+    <ClInclude Include="include\Pipe.h" />
     <ClInclude Include="include\SDLApp.h" />
     <ClInclude Include="include\TexturedRectangle.h" />
   </ItemGroup>

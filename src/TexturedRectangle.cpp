@@ -1,14 +1,13 @@
 #include "TexturedRectangle.h"
-#include "ResourceManager.h"
 
 //Constructor
 TexturedRectangle::TexturedRectangle(SDL_Renderer* renderer, std::string path)
 {
-	//Get surface through the resource manager
-	SDL_Surface* surfaceRect = ResourceManager::GetInstance().GetSurface(path); 
-
+	//Load surface
+	SDL_Surface* surfaceRect = IMG_Load(path.c_str());
 	//Initialize texture
 	mTexture = SDL_CreateTextureFromSurface(renderer, surfaceRect);
+
 
 	SDL_FreeSurface(surfaceRect);
 	
@@ -63,6 +62,18 @@ void TexturedRectangle::SetFlip(SDL_RendererFlip flip)
 	mFlip = flip;
 }
 
+//Get x-coordinate
+double TexturedRectangle::GetX()
+{
+	return mRect.x;
+}
+
+//Get y-coordinate
+double TexturedRectangle::GetY()
+{
+	return mRect.y;
+}
+
 //Get texture width
 int TexturedRectangle::GetWidth()
 {
@@ -73,6 +84,11 @@ int TexturedRectangle::GetWidth()
 int TexturedRectangle::GetHeight()
 {
 	return mRect.h;
+}
+
+double TexturedRectangle::GetAngle()
+{
+	return mAngle;
 }
 
 
