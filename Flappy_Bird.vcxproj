@@ -20,19 +20,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Bird.cpp" />
+    <ClCompile Include="src\CheckCollision.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\Ground.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Pipe.cpp" />
     <ClCompile Include="src\SDLApp.cpp" />
+    <ClCompile Include="src\Sound.cpp" />
     <ClCompile Include="src\TexturedRectangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Bird.h" />
+    <ClInclude Include="include\CheckCollision.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\Ground.h" />
     <ClInclude Include="include\Pipe.h" />
+    <ClInclude Include="include\Score.h" />
     <ClInclude Include="include\SDLApp.h" />
+    <ClInclude Include="include\Sound.h" />
     <ClInclude Include="include\TexturedRectangle.h" />
   </ItemGroup>
   <ItemGroup>

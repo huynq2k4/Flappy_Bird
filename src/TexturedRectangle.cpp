@@ -5,12 +5,37 @@ TexturedRectangle::TexturedRectangle(SDL_Renderer* renderer, std::string path)
 {
 	//Load surface
 	SDL_Surface* surfaceRect = IMG_Load(path.c_str());
+
 	//Initialize texture
 	mTexture = SDL_CreateTextureFromSurface(renderer, surfaceRect);
 
 
 	SDL_FreeSurface(surfaceRect);
 	
+
+	//Set initial value for textured rectangle
+	mRect.x = 200;
+	mRect.y = 200;
+	mRect.w = 10;
+	mRect.h = 10;
+
+	//Set normal value for extra properties
+	mAngle = 0;
+	mClip = NULL;
+	mFlip = SDL_FLIP_NONE;
+}
+
+TexturedRectangle::TexturedRectangle(SDL_Renderer* renderer, TTF_Font* font, std::string text, SDL_Color color)
+{
+	//Load surface
+	SDL_Surface* surfaceRect = TTF_RenderText_Solid(font, text.c_str(), color);
+
+	//Initialize texture
+	mTexture = SDL_CreateTextureFromSurface(renderer, surfaceRect);
+
+
+	SDL_FreeSurface(surfaceRect);
+
 
 	//Set initial value for textured rectangle
 	mRect.x = 200;
@@ -103,5 +128,5 @@ void TexturedRectangle::Render(SDL_Renderer* renderer)
 SDL_bool TexturedRectangle::IsColliding(TexturedRectangle& obj)
 {
 	SDL_Rect tmp = obj.GetRect();
-	return SDL_HasIntersection(&mRect, &tmp);
+	return CheckCollision(&mRect, mAngle, &tmp, obj.GetAngle());
 }

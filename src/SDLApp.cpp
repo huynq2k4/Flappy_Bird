@@ -4,7 +4,7 @@
 SDLApp::SDLApp(int imgFlag, const char* title, int x, int y, int w, int h)
 {
 	//Initialize SDL, print error if having any error while initializing SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0 || ((IMG_Init(imgFlag) & imgFlag) != imgFlag)) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 || ((IMG_Init(imgFlag) & imgFlag) != imgFlag) || TTF_Init() < 0) {
 		cout << "SDL could not be initialize! Error: " << SDL_GetError() << endl;
 	}
 
@@ -23,7 +23,9 @@ SDLApp::~SDLApp()
 	mWindow = nullptr;
 
 	IMG_Quit();
+	TTF_Quit();
 	SDL_Quit();
+
 }
 
 //Get the renderer
@@ -83,6 +85,7 @@ void SDLApp::RunAppLoop()
 		SDL_RenderPresent(mRenderer);
 
 		Uint32 finish = SDL_GetTicks();
+
 		//Set a frame cap
 		if (finish - start < 16) {
 			SDL_Delay(16 - (finish - start));

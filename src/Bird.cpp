@@ -18,6 +18,8 @@ void Bird::SetDefaultFrame(int x, int y, int w, int h)
 	mSpriteHeight = h;
 }
 
+
+
 void Bird::DrawFrame(int frame, int speed)
 {
 	mFrame.x = mSpriteWidth * (int)(frame / speed);

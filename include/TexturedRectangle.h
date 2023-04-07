@@ -3,7 +3,9 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <string>
+#include "CheckCollision.h"
 
 
 class TexturedRectangle {
@@ -23,7 +25,8 @@ private:
 
 public:
 	//Constructor
-	TexturedRectangle(SDL_Renderer* renderer, std::string path);
+	TexturedRectangle(SDL_Renderer*, std::string);
+	TexturedRectangle(SDL_Renderer*, TTF_Font*, std::string, SDL_Color);
 
 	//Destructor
 	~TexturedRectangle();
