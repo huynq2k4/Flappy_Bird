@@ -42,6 +42,9 @@
     <ClCompile Include="src\CheckCollision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Text.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\SDLApp.h">
@@ -65,7 +68,7 @@
     <ClInclude Include="include\Sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Score.h">
+    <ClInclude Include="include\Text.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\CheckCollision.h">
@@ -74,9 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="asset\image\background.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="asset\image\pipe.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="asset\image\pipe-green.png">
@@ -88,5 +88,27 @@
     <Image Include="asset\image\base.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="asset\image\white.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="asset\font\Flappy-Bird.TTF">
+      <Filter>Resource Files</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="asset\sound\die.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="asset\sound\fly.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="asset\sound\get-point.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="asset\sound\hit.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
   </ItemGroup>
 </Project>

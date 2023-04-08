@@ -12,8 +12,6 @@ SDLApp::SDLApp(int imgFlag, const char* title, int x, int y, int w, int h)
 	mWindow = SDL_CreateWindow(title, x, y, w, h, SDL_WINDOW_SHOWN);
 	mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	
-	//Set initial mouse coordinate
-	mMouseX = 0; mMouseY = 0;
 }
 
 //Destructor
@@ -34,17 +32,9 @@ SDL_Renderer* SDLApp::GetRenderer() const
 	return mRenderer;
 }
 
-//Get mouse X-coordinate
-int SDLApp::GetMouseX()
-{
-	return mMouseX;
-}
 
-//Get mouse Y-coordinate
-int SDLApp::GetMouseY()
-{
-	return mMouseY;
-}
+
+
 
 //Handle events
 void SDLApp::SetEventCallback(function<void(void)> func)
@@ -65,18 +55,8 @@ void SDLApp::RunAppLoop()
 		Uint32 start = SDL_GetTicks();
 
 
-		//Get the current coordinate of mouse 
-		Uint32 button = SDL_GetMouseState(&mMouseX, &mMouseY);
-
 		//Do event specified by user
 		mEventCallback();
-
-		//Clear the screen before drawing
-		SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-		SDL_RenderClear(mRenderer);
-
-		//Set color to draw
-		SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 
 		//Render to screen specified by user
 		mRenderCallback();

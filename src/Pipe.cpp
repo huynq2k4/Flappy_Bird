@@ -1,5 +1,6 @@
 #include "Pipe.h"
 #include <random>
+#include "CheckCollision.h"
 
 Pipe::Pipe()
 {
@@ -10,12 +11,14 @@ Pipe::Pipe()
 	mSpriteHeight = 0;
 	mIsMoving = true;
 	mIsMovingDown = false;
-	//mRenderer = nullptr;
+	mGetScore = { 0, 0, 0, 0 };
+	mDistance = 0;
+	mIsScoring = false;
 }
 
 Pipe::Pipe(SDL_Renderer* renderer, std::string path, int w, int h)
 {
-	//mRenderer = renderer;
+	
 	mPipeHigh = new GameObject(renderer, path);
 	mPipeHigh->GetTexturedRectangle().SetFlip(SDL_FLIP_VERTICAL);
 	mPipeLow = new GameObject(renderer, path);
@@ -26,6 +29,9 @@ Pipe::Pipe(SDL_Renderer* renderer, std::string path, int w, int h)
 	mSpriteWidth = w;
 	mIsMoving = true;
 	mIsMovingDown = false;
+	mGetScore = { 0, 0, 0, 0 };
+	mDistance = 0;
+	mIsScoring = false;
 
 }
 
@@ -52,12 +58,18 @@ void Pipe::SetStatus(int posX, int posYMax, int posYMin, int distance)
 	
 	mPipeLow->GetTexturedRectangle().SetPosition(posX, rand() % (posYMax - posYMin + 1) + posYMin);
 	mPipeHigh->GetTexturedRectangle().SetPosition(posX, mPipeLow->GetY() - distance - mSpriteHeight);
+	mGetScore.x = mPipeLow->GetX() + mSpriteWidth;
+	mGetScore.y = mPipeLow->GetY() - distance;
+	mGetScore.h = distance;
+	mDistance = distance;
 }
 
 void Pipe::MoveHorizontal(int speed)
 {
 	mPipeHigh->GetTexturedRectangle().SetPosition(mPipeHigh->GetX() - speed, mPipeHigh->GetY());
 	mPipeLow->GetTexturedRectangle().SetPosition(mPipeLow->GetX() - speed, mPipeLow->GetY());
+	mGetScore.x = mPipeLow->GetX() + mSpriteWidth;
+
 	
 }
 
@@ -71,6 +83,7 @@ void Pipe::MoveVertical(int speed, bool isMovingDown)
 		mPipeHigh->GetTexturedRectangle().SetPosition(mPipeHigh->GetX(), mPipeHigh->GetY() - speed);
 		mPipeLow->GetTexturedRectangle().SetPosition(mPipeLow->GetX(), mPipeLow->GetY() - speed);
 	}
+	mGetScore.y = mPipeLow->GetY() - mDistance;
 }
 
 int Pipe::GetPipeWidth()
@@ -115,6 +128,20 @@ void Pipe::Render()
 void Pipe::SetMoveDown(bool goDown)
 {
 	mIsMovingDown = goDown;
+}
+
+bool Pipe::DetectScoring(Bird* bird)
+{
+	Point center = { bird->GetTexturedRectangle().GetRect().x + 1.0 * bird->GetTexturedRectangle().GetRect().w / 2, bird->GetTexturedRectangle().GetRect().y + 1.0 * bird->GetTexturedRectangle().GetRect().h / 2 };
+	vector<Point> collisionShape = bird->GetCollisionShape();
+	if (CheckCollision2(collisionShape, bird->GetAngle(), center, &mGetScore) == SDL_TRUE && mIsScoring == false) {
+		mIsScoring = true;
+		return true;
+	}
+	else if (CheckCollision2(collisionShape, bird->GetAngle(), center, &mGetScore) == SDL_FALSE && mIsScoring == true) {
+		mIsScoring = false;
+	}
+	return false;
 }
 
 int Pipe::GetPipeY()

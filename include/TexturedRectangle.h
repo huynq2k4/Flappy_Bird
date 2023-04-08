@@ -6,7 +6,10 @@
 #include <SDL_ttf.h>
 #include <string>
 #include "CheckCollision.h"
+#include <iostream>
+#include <vector>
 
+using namespace std;
 
 class TexturedRectangle {
 private:
@@ -19,20 +22,25 @@ private:
 
 	SDL_RendererFlip mFlip;
 
-	//Get rectangle from texture
-	inline SDL_Rect GetRect() { return mRect; }
+	
+
+
+
+	
 	
 
 public:
-	//Constructor
+	//Image constructor
 	TexturedRectangle(SDL_Renderer*, std::string);
+
+	//Text constructor
 	TexturedRectangle(SDL_Renderer*, TTF_Font*, std::string, SDL_Color);
 
 	//Destructor
 	~TexturedRectangle();
 
 	//Set the coordinate of texture
-	void SetPosition(double x, double y);
+	void SetPosition(int x, int y);
 
 	//Set width and height of texture
 	void SetDimension(int w, int h);
@@ -67,6 +75,14 @@ public:
 	//Check collision
 	SDL_bool IsColliding(TexturedRectangle& obj);
 
+	void SetAlpha(int alpha);
+
+	//Get rectangle from texture
+	inline SDL_Rect GetRect() { return mRect; }
+
+	
+
+	
 
 };
 

@@ -17,9 +17,6 @@ private:
 	SDL_Window* mWindow = nullptr;
 	SDL_Renderer* mRenderer = nullptr;
 
-	//Store mouse position
-	int mMouseX, mMouseY;
-
 	//Check if app is quited or not
 	bool mQuit = false;
 
@@ -37,9 +34,6 @@ public:
 	//Get the renderer
 	SDL_Renderer* GetRenderer() const;
 
-	//Get mouse position
-	int GetMouseX();
-	int GetMouseY();
 
 	//Handle events and rendering
 	void SetEventCallback(function<void(void)> func);

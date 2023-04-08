@@ -3,6 +3,7 @@
 
 #include "GameObject.h"
 #include "TexturedRectangle.h"
+#include "CheckCollision.h"
 
 
 class Bird : public GameObject {
@@ -12,6 +13,8 @@ private:
 	SDL_Rect mFrame;
 	int mSpriteWidth;
 	int mSpriteHeight;
+	vector<Point> mCollisionInit;
+	vector<Point> mCollisionShape;
 
 	
 public:
@@ -27,6 +30,12 @@ public:
 	void FreeFall(double accelerationFly, double accelerationRotate);
 	void StopOnGround(double posY);
 
+	void CreateCollisionShape(vector<Point> collisionShape);
+
+	vector<Point>& GetCollisionShape();
+
+	void ShiftColliders();
+	SDL_bool IsColliding(GameObject& obj);
 
 };
 

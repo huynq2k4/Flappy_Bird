@@ -2,11 +2,13 @@
 #define GAME_OBJECT_H
 
 #include "TexturedRectangle.h"
+#include <vector>
 
 class GameObject {
 private:
 	TexturedRectangle* mSprite;
 	SDL_Renderer* mRenderer;
+	
 
 public:
 	//Constructor
@@ -32,7 +34,9 @@ public:
 	//Retrieve textured rectangle from object
 	TexturedRectangle& GetTexturedRectangle();
 
-	SDL_bool IsColliding(GameObject& obj);
+	virtual SDL_bool IsColliding(GameObject& obj);
+	
+
 };
 
 

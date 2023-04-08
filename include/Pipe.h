@@ -3,6 +3,7 @@
 
 #include "GameObject.h"
 #include <iostream>
+#include "Bird.h"
 
 class Pipe{
 private:
@@ -12,6 +13,9 @@ private:
 	int mSpriteWidth, mSpriteHeight;
 	bool mIsMoving;
 	bool mIsMovingDown;
+	SDL_Rect mGetScore;
+	int mDistance;
+	bool mIsScoring;
 public:
 	Pipe();
 
@@ -38,6 +42,8 @@ public:
 	void MoveVertical(int speed, bool isMovingDown);
 
 	void Render();
+
+	bool DetectScoring(Bird* bird);
 
 };
 

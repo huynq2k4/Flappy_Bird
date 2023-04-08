@@ -64,3 +64,5 @@ SDL_bool GameObject::IsColliding(GameObject& obj)
 {
 	return GetTexturedRectangle().IsColliding(obj.GetTexturedRectangle());
 }
+
+

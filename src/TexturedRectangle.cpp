@@ -19,6 +19,7 @@ TexturedRectangle::TexturedRectangle(SDL_Renderer* renderer, std::string path)
 	mRect.w = 10;
 	mRect.h = 10;
 
+
 	//Set normal value for extra properties
 	mAngle = 0;
 	mClip = NULL;
@@ -55,8 +56,9 @@ TexturedRectangle::~TexturedRectangle()
 	SDL_DestroyTexture(mTexture);
 }
 
+
 //Set the coordinate of texture
-void TexturedRectangle::SetPosition(double x, double y)
+void TexturedRectangle::SetPosition(int x, int y)
 {
 	mRect.x = x;
 	mRect.y = y;
@@ -128,5 +130,14 @@ void TexturedRectangle::Render(SDL_Renderer* renderer)
 SDL_bool TexturedRectangle::IsColliding(TexturedRectangle& obj)
 {
 	SDL_Rect tmp = obj.GetRect();
-	return CheckCollision(&mRect, mAngle, &tmp, obj.GetAngle());
+	return SDL_HasIntersection(&mRect, &tmp);
 }
+
+void TexturedRectangle::SetAlpha(int alpha)
+{
+	SDL_SetTextureAlphaMod(mTexture, alpha);
+}
+
+
+
+

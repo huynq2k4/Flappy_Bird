@@ -27,6 +27,7 @@
     <ClCompile Include="src\Pipe.cpp" />
     <ClCompile Include="src\SDLApp.cpp" />
     <ClCompile Include="src\Sound.cpp" />
+    <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\TexturedRectangle.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -35,7 +36,7 @@
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\Ground.h" />
     <ClInclude Include="include\Pipe.h" />
-    <ClInclude Include="include\Score.h" />
+    <ClInclude Include="include\Text.h" />
     <ClInclude Include="include\SDLApp.h" />
     <ClInclude Include="include\Sound.h" />
     <ClInclude Include="include\TexturedRectangle.h" />
@@ -44,8 +45,17 @@
     <Image Include="asset\image\background.png" />
     <Image Include="asset\image\base.png" />
     <Image Include="asset\image\pipe-green.png" />
-    <Image Include="asset\image\pipe.png" />
     <Image Include="asset\image\flappy-bird.png" />
+    <Image Include="asset\image\white.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="asset\font\Flappy-Bird.TTF" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="asset\sound\die.wav" />
+    <Media Include="asset\sound\fly.wav" />
+    <Media Include="asset\sound\get-point.wav" />
+    <Media Include="asset\sound\hit.wav" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

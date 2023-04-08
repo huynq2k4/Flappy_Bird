@@ -1,21 +1,9 @@
 #include "CheckCollision.h"
-#include <iostream>
-#include <algorithm>
-#include <vector>
 
-using namespace std;
 
 const double PI = atan(1) * 4;
 
-class Point {
-public:
-	double x;
-	double y;
-	Point(double _x, double _y) {
-		x = _x;
-		y = _y;
-	}
-};
+
 
 // Given three collinear points p, q, r, the function checks if
 // point q lies on line segment 'pr'
@@ -83,41 +71,69 @@ Point rotate(Point src, Point center, double angle) {
 	return src;
 }
 
-SDL_bool CheckCollision(SDL_Rect* rect1, double angle1, SDL_Rect* rect2, double angle2)
+//SDL_bool CheckCollision(SDL_Rect* rect1, double angle1, Point center1, SDL_Rect* rect2, double angle2, Point center2)
+//{
+//	//Convert integer coordinate to double coordinate
+//	double rect1x = rect1->x;
+//	double rect1y = rect1->y;
+//	double rect1w = rect1->w;
+//	double rect1h = rect1->h;
+//
+//	double rect2x = rect2->x;
+//	double rect2y = rect2->y;
+//	double rect2w = rect2->w;
+//	double rect2h = rect2->h;
+//
+//	//Store new rect after rotation
+//	vector<Point> newRect1;
+//	//Point center1 = { rect1x + rect1w / 2, rect1y + rect1h / 2 };
+//
+//
+//	newRect1.push_back(rotate({ rect1x, rect1y }, center1, angle1));
+//	newRect1.push_back(rotate({ rect1x, rect1y + rect1h }, center1, angle1));
+//	newRect1.push_back(rotate({ rect1x + rect1w, rect1y }, center1, angle1));
+//	newRect1.push_back(rotate({ rect1x + rect1w, rect1y + rect1h }, center1, angle1));
+//
+//	vector<Point> newRect2;
+//	//Point center2 = { rect2x + rect2w / 2, rect2y + rect2h / 2 };
+//	newRect2.push_back(rotate({ rect2x, rect2y }, center2, angle2));
+//	newRect2.push_back(rotate({ rect2x, rect2y + rect2h }, center2, angle2));
+//	newRect2.push_back(rotate({ rect2x + rect2w, rect2y }, center2, angle2));
+//	newRect2.push_back(rotate({ rect2x + rect2w, rect2y + rect2h }, center2, angle2));
+//
+//	//Collide if any pair of segments intersect
+//	for (int i = 0; i < 4; i++) {
+//		for (int j = 0; j < 4; j++) {
+//			if (doIntersect(newRect1[i % 4], newRect1[(i + 1) % 4], newRect2[j % 4], newRect2[(j + 1) % 4])) return SDL_TRUE;
+//		}
+//	}
+//	return SDL_FALSE;
+//}
+
+SDL_bool CheckCollision2(vector<Point> shape1, double angle, Point center1, SDL_Rect* shape2)
 {
-	//Convert integer coordinate to double coordinate
-	double rect1x = rect1->x;
-	double rect1y = rect1->y;
-	double rect1w = rect1->w;
-	double rect1h = rect1->h;
+	for (int i = 0; i < shape1.size(); i++) {
+		shape1[i] = rotate(shape1[i], center1, angle);
+	}
 
-	double rect2x = rect2->x;
-	double rect2y = rect2->y;
-	double rect2w = rect2->w;
-	double rect2h = rect2->h;
-
-	//Store new rect after rotation
-	vector<Point> newRect1;
-	Point newRect1center = { rect1x + rect1w / 2, rect1y + rect1h / 2 };
-
-
-	newRect1.push_back(rotate({ rect1x, rect1y }, newRect1center, angle1));
-	newRect1.push_back(rotate({ rect1x, rect1y + rect1h }, newRect1center, angle1));
-	newRect1.push_back(rotate({ rect1x + rect1w, rect1y }, newRect1center, angle1));
-	newRect1.push_back(rotate({ rect1x + rect1w, rect1y + rect1h }, newRect1center, angle1));
+	double rect2x = shape2->x;
+	double rect2y = shape2->y;
+	double rect2w = shape2->w;
+	double rect2h = shape2->h;
 
 	vector<Point> newRect2;
-	Point newRect2center = { rect2x + rect2w / 2, rect2y + rect2h / 2 };
-	newRect2.push_back(rotate({ rect2x, rect2y }, newRect2center, angle2));
-	newRect2.push_back(rotate({ rect2x, rect2y + rect2h }, newRect2center, angle2));
-	newRect2.push_back(rotate({ rect2x + rect2w, rect2y }, newRect2center, angle2));
-	newRect2.push_back(rotate({ rect2x + rect2w, rect2y + rect2h }, newRect2center, angle2));
+	newRect2.push_back({ rect2x, rect2y });
+	newRect2.push_back({ rect2x, rect2y + rect2h });
+	newRect2.push_back({ rect2x + rect2w, rect2y + rect2h });
+	newRect2.push_back({ rect2x + rect2w, rect2y });
+	
 
 	//Collide if any pair of segments intersect
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			if (doIntersect(newRect1[i % 4], newRect1[(i + 1) % 4], newRect2[j % 4], newRect2[(j + 1) % 4])) return SDL_TRUE;
+	for (int i = 0; i < shape1.size(); i++) {
+		for (int j = 0; j < newRect2.size(); j++) {
+			if (doIntersect(shape1[i % shape1.size()], shape1[(i + 1) % shape1.size()], newRect2[j % newRect2.size()], newRect2[(j + 1) % newRect2.size()])) return SDL_TRUE;
 		}
 	}
 	return SDL_FALSE;
 }
+

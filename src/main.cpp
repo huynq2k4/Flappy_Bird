@@ -4,20 +4,37 @@
 #include "Bird.h"
 #include "Pipe.h"
 #include "Ground.h"
+#include "CheckCollision.h"
+#include "Text.h"
+#include "Sound.h"
 #include <vector>
 
+//Screen constant
 const int SCREEN_HEIGHT = 720;
 const int SCREEN_WIDTH = 1280;
+const int SPEED_SCROLLING_SCREEN = 3;
+
+//Bird constant
 const int DEFAULT_SPEED_FLY = -8;
 const double DEFAULT_ANGLE = -30;
 const int NUMBER_OF_FRAME = 4;
-const int SPRITE_HEIGHT = 610;
-const int SPRITE_WIDTH = 2868;
+const int BIRD_HEIGHT = 610;
+const int BIRD_WIDTH = 2868;
+const int SPEED_RENDER_BIRD = 4;
+
+//Pipe constant
 const int TOTAL_PIPE = 4;
-const int SPEED_SCREEN = 3;
-const int MAX_PIPE_HEIGHT = 550;
-const int MIN_PIPE_HEIGHT = 250;
+const int MAX_PIPE_Y = 550;
+const int MIN_PIPE_Y = 250;
 const int PIPE_DISTANCE = 175;
+const int SPEED_MOVING_VERTICAL = 1;
+
+//Score constant
+const int SCORE_X = 10;
+const int SCORE_Y = 650;
+const int SCORE_WIDTH_CHAR = 30;
+const int SCORE_HEIGHT_CHAR = 50;
+
 
 
 SDLApp* app;
@@ -26,6 +43,12 @@ GameObject* background;
 Bird* flappyBird;
 Ground* ground;
 vector<Pipe*> pipe(TOTAL_PIPE + 1);
+GameObject* flash;
+Text* score;
+Sound* soundFly;
+Sound* soundGetPoint;
+Sound* soundDie;
+Sound* soundHit;
 
 bool startGame = false; //check if the game is started or not
 
@@ -39,8 +62,9 @@ bool holdKey = false;
 //Make sure the bird flaps wing only when it flys (space keydown)
 bool repeatFly = false;
 
-int frame = 0;
-
+bool isFlash = false;
+static int alpha = 255;
+int point = 0;
 
 void HandleEvents() {
 	SDL_Event event;
@@ -57,9 +81,15 @@ void HandleEvents() {
 				resetGame = true;
 				flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
 				for (int i = 0; i < TOTAL_PIPE + 1; i++) {
-					pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
+					pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_Y, MIN_PIPE_Y, PIPE_DISTANCE);
 					pipe[i]->SetMode();
 				}
+				alpha = 255;
+				isFlash = false;
+				startGame = false;
+				point = 0;
+				score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
+				score->ChangeText("Score: 0");
 			}
 		}
 		
@@ -72,7 +102,9 @@ void HandleEvents() {
 			if (!holdKey && startGame) {
 				isFlying = true;
 				flappyBird->Fly(DEFAULT_SPEED_FLY, DEFAULT_ANGLE);
-				frame = 0;
+				flappyBird->DrawFrame(0, SPEED_RENDER_BIRD);
+				flappyBird->ShiftColliders();
+				soundFly->PlaySound(0);
 				holdKey = true;
 				repeatFly = false;
 
@@ -88,68 +120,91 @@ void HandleEvents() {
 }
 
 void HandleRendering() {
+	
 
-	background->Render();
+	
 
 	static int scrollingGround = 0;
-	const int speed = 4;
+	static int frame = 0;
 
 	if (resetGame) {
+		background->Render();
+		
 		srand((unsigned int)time(NULL));
 		++frame;
-		if (frame / speed >= NUMBER_OF_FRAME) {
+		if (frame / SPEED_RENDER_BIRD >= NUMBER_OF_FRAME) {
 			frame = 0;
 		}
-		scrollingGround -= SPEED_SCREEN;
+		scrollingGround -= SPEED_SCROLLING_SCREEN;
 		if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
 	}
 	else {
 		if (startGame) {
+			background->Render();		
 			if (flappyBird->GetY() < 5 * SCREEN_HEIGHT / 6 - 52) {
 				flappyBird->FreeFall(0.5, 0.1);
 			}
 			else {
 				flappyBird->StopOnGround(5 * SCREEN_HEIGHT / 6 - 52);
 				startGame = false;
+				soundHit->PlaySound(0);
 			}
 			++frame;
-			if (frame / speed >= NUMBER_OF_FRAME && !repeatFly) {
-				frame = speed;
+			if (frame / SPEED_RENDER_BIRD >= NUMBER_OF_FRAME && !repeatFly) {
+				frame = SPEED_RENDER_BIRD;
 				repeatFly = true;
 			}
 			else if (repeatFly) {
-				frame = speed;
+				frame = SPEED_RENDER_BIRD;
 			}
+			flappyBird->ShiftColliders();
 
 			//flappyBird->Render();
 
 			for (int i = 0; i < TOTAL_PIPE + 1; i++) {
-				pipe[i]->MoveHorizontal(SPEED_SCREEN);
+				pipe[i]->MoveHorizontal(SPEED_SCROLLING_SCREEN);
 				pipe[i]->Render();
 
 				//If pipe moves out of screen, reset normal status and pipe mode
 				if (pipe[i]->GetPipeX() < -(pipe[i]->GetPipeWidth())) {
-					pipe[i]->SetStatus(SCREEN_WIDTH + SCREEN_WIDTH / TOTAL_PIPE - pipe[i]->GetPipeWidth(), MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
+					pipe[i]->SetStatus(SCREEN_WIDTH + SCREEN_WIDTH / TOTAL_PIPE - pipe[i]->GetPipeWidth(), MAX_PIPE_Y, MIN_PIPE_Y, PIPE_DISTANCE);
 					pipe[i]->SetMode();
 				}
 				if (pipe[i]->IsMoving()) {
-					if (pipe[i]->GetPipeY() < MIN_PIPE_HEIGHT) pipe[i]->SetMoveDown(true);
-					else if (pipe[i]->GetPipeY() > MAX_PIPE_HEIGHT) pipe[i]->SetMoveDown(false);
-					pipe[i]->MoveVertical(SPEED_SCREEN - 2, pipe[i]->IsMovingDown());
+					if (pipe[i]->GetPipeY() < MIN_PIPE_Y) pipe[i]->SetMoveDown(true);
+					else if (pipe[i]->GetPipeY() > MAX_PIPE_Y) pipe[i]->SetMoveDown(false);
+					pipe[i]->MoveVertical(SPEED_MOVING_VERTICAL, pipe[i]->IsMovingDown());
 				}
+				if (pipe[i]->DetectScoring(flappyBird)) {
+					++point;
+					string s = "Score: " + to_string(point);
+					score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * s.length(), SCORE_HEIGHT_CHAR);
+					score->ChangeText(s);
+					soundGetPoint->PlaySound(0);
+				}
+				
 
 				if (flappyBird->IsColliding(pipe[i]->GetPipeUp()) == SDL_TRUE || flappyBird->IsColliding(pipe[i]->GetPipeDown()) == SDL_TRUE) {
+					
 					startGame = false;
+					soundHit->PlaySound(0);
+					//soundDie->PlaySound(0);
 				}
 
 			}
 
-			scrollingGround -= SPEED_SCREEN;
+			scrollingGround -= SPEED_SCROLLING_SCREEN;
 			if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
 		}
 		else {
+
+
+			
+
+			background->Render();
 			if (flappyBird->GetY() < 5 * SCREEN_HEIGHT / 6 - 52) {
 				flappyBird->FreeFall(0.5, 0.1);
+				
 			}
 			else {
 				flappyBird->StopOnGround(5 * SCREEN_HEIGHT / 6 - 52);
@@ -161,7 +216,8 @@ void HandleRendering() {
 		}
 	}
 	
-	flappyBird->DrawFrame(frame, speed);
+	
+	flappyBird->DrawFrame(frame, SPEED_RENDER_BIRD);
 	flappyBird->Render();
 
 	ground->GetTexturedRectangle().SetPosition(scrollingGround, 5 * SCREEN_HEIGHT / 6);
@@ -173,6 +229,24 @@ void HandleRendering() {
 	ground->Render();
 
 
+	static int mode = 13;
+	if (!resetGame && !startGame && !isFlash) {
+		flash->GetTexturedRectangle().SetAlpha(alpha);
+		if (alpha >= 255) {
+			mode = -13;
+
+		}
+		alpha += mode;
+		flash->Render();
+		
+		if (alpha < 0) {
+			isFlash = true;
+
+		}
+	}
+
+	score->Render();
+	
 
 
 }
@@ -193,7 +267,7 @@ int main(int argc, char* args[]) {
 
 	for (int i = 0; i < TOTAL_PIPE + 1; i++) {
 		pipe[i] = new Pipe(app->GetRenderer(), "asset/image/pipe-green.png", 104, 640);
-		pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_HEIGHT, MIN_PIPE_HEIGHT, PIPE_DISTANCE);
+		pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_Y, MIN_PIPE_Y, PIPE_DISTANCE);
 		pipe[i]->SetMode();
 	}
 
@@ -202,11 +276,32 @@ int main(int argc, char* args[]) {
 
 	flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
 	flappyBird->GetTexturedRectangle().SetDimension(72, 61);
-	flappyBird->SetDefaultFrame(0, 0, SPRITE_WIDTH / NUMBER_OF_FRAME, SPRITE_HEIGHT);
+	flappyBird->SetDefaultFrame(0, 0, BIRD_WIDTH / NUMBER_OF_FRAME, BIRD_HEIGHT);
+
+	vector<Point> birdCollisionBox;
+
+	birdCollisionBox.push_back({ 714, 575 });
+	birdCollisionBox.push_back({ 714, 382 });
+	birdCollisionBox.push_back({ 655, 77 });
+	birdCollisionBox.push_back({ 470, 0 });
+	birdCollisionBox.push_back({ 319, 108 });
+	birdCollisionBox.push_back({ 139, 312 });
+	birdCollisionBox.push_back({ 139, 575 });
+	
+	flappyBird->CreateCollisionShape(birdCollisionBox);
 
 	
+	flash = new GameObject(app->GetRenderer(), "asset/image/white.png");
+	flash->GetTexturedRectangle().SetPosition(-50, -50);
+	flash->GetTexturedRectangle().SetDimension(SCREEN_WIDTH + 300, SCREEN_HEIGHT + 300);
 
-	
+	score = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "Score: 0", 112, {255,0,0});
+	score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
+
+	soundFly = new Sound("asset/sound/fly.wav");
+	soundGetPoint = new Sound("asset/sound/get-point.wav");
+	soundDie = new Sound("asset/sound/die.wav");
+	soundHit = new Sound("asset/sound/hit.wav");
 
 	//Handle events and rendering
 	app->SetEventCallback(HandleEvents);
