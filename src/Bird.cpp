@@ -20,9 +20,9 @@ void Bird::SetDefaultFrame(int x, int y, int w, int h)
 
 
 
-void Bird::DrawFrame(int frame, int speed)
+void Bird::DrawFrame(int frame, int slowDownSpeed)
 {
-	mFrame.x = mSpriteWidth * (int)(frame / speed);
+	mFrame.x = mSpriteWidth * (int)(frame / slowDownSpeed);
 	GetTexturedRectangle().SetClip(&mFrame);
 }
 

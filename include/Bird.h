@@ -24,7 +24,7 @@ public:
 
 	void SetDefaultFrame(int x, int y, int w, int h);
 
-	void DrawFrame(int frame, int speed);
+	void DrawFrame(int frame, int slowDownSpeed);
 
 	void Fly(double velFly, double angle);
 	void FreeFall(double accelerationFly, double accelerationRotate);

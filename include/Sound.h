@@ -5,18 +5,26 @@
 #include <SDL_mixer.h>
 #include <string>
 
-class Sound {
+
+class SoundEffect {
 private:
-	Mix_Chunk* mSound;
+	Mix_Chunk* mSoundEffect;
 public:
-	Sound(std::string path);
-	~Sound();
-
+	SoundEffect(std::string path);
+	~SoundEffect();
 	void PlaySound(int loop);
-
 	void StopSound();
+};
 
-
+class Music{
+private:
+	Mix_Music* mMusic;
+public:
+	Music(std::string path);
+	~Music();
+	void PlaySound(int loop);
+	void PauseSound();
+	void StopSound();
 };
 
 

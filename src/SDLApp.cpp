@@ -22,6 +22,7 @@ SDLApp::~SDLApp()
 
 	IMG_Quit();
 	TTF_Quit();
+	Mix_Quit();
 	SDL_Quit();
 
 }
