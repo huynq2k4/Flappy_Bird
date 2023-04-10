@@ -68,8 +68,9 @@ bool isFlash = false;
 static int alpha = 255;
 int point = 0;
 
-string hScore;
+static string hScore = "0";
 ifstream fin("score.txt");
+
 //ofstream fout("score.txt");
 
 void HandleEvents() {
@@ -78,32 +79,43 @@ void HandleEvents() {
 	while (SDL_PollEvent(&event)) {
 
 		if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
+			int sc; fin >> sc;
+			if (sc < stoi(hScore)) {
+				ofstream fout("score.txt", ios::trunc);
+				fout << stoi(hScore);
+			}
 			app->EndAppLoop();
+			
 		}
 		bool isFlying = false;
 
-		if (event.key.keysym.sym == SDLK_RETURN) {
+		if (event.key.keysym.sym == SDLK_s) {
 			if (!resetGame && !startGame) {
 				resetGame = true;
+				cout << "Line 95: " << hScore << endl;
 				flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
+				cout << "Line 97: " << hScore << endl;
 				for (int i = 0; i < TOTAL_PIPE + 1; i++) {
 					pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_Y, MIN_PIPE_Y, PIPE_DISTANCE);
 					pipe[i]->SetMode();
+					cout << "Line 101: " << hScore << endl;
 				}
 				alpha = 255;
 				isFlash = false;
 				startGame = false;
+				cout << "Line 106: " << hScore << endl;
 				point = 0;
 				score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
 				score->ChangeText("Score: 0");
+				cout << "Line 110: " << hScore << endl;
 				highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * (12 + hScore.length()), SCORE_HEIGHT_CHAR);
-				fin >> hScore;
 				highScore->ChangeText("High score: " + hScore);
+				cout << "Line 113: " << hScore << endl;
 			}
 		}
 
 
-		else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
+		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
 			if (!startGame && resetGame) {
 				startGame = true;
 				resetGame = false;
@@ -121,14 +133,15 @@ void HandleEvents() {
 
 
 		}
-		else if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_SPACE) {
+		if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_SPACE) {
 			holdKey = false;
 		}
-		else if (event.key.keysym.sym = SDLK_r) {
+		if (event.key.keysym.sym == SDLK_r) {
 			if (!startGame) {
 				ofstream fout("score.txt", ios::trunc);
-				fout << 0;
+				fout << "0";
 				hScore = "0";
+				cout << "Line 144: " << hScore << endl;
 				highScore->ChangeText("High score: 0");
 				highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * 13, SCORE_HEIGHT_CHAR);
 			}
@@ -166,10 +179,15 @@ void HandleRendering() {
 				flappyBird->StopOnGround(5 * SCREEN_HEIGHT / 6 - 52);
 				startGame = false;
 				soundHit->PlaySound(0);
+				//ifstream fin("score.txt");
+				//fin >> hScore;
 				if (point > stoi(hScore)) {
 					hScore = to_string(point);
-					ofstream fout("score.txt", ios::trunc);
-					fout << hScore;
+					cout << hScore << endl;
+
+
+
+					
 				}
 			}
 			++frame;
@@ -212,10 +230,11 @@ void HandleRendering() {
 
 					startGame = false;
 					soundHit->PlaySound(0);
+
+					//fin >> hScore;
 					if (point > stoi(hScore)) {
 						hScore = to_string(point);
-						ofstream fout("score.txt", ios::trunc);
-						fout << hScore;
+						cout << hScore << endl;
 					}
 					//soundDie->PlaySound(0);
 				}
@@ -330,7 +349,7 @@ int main(int argc, char* args[]) {
 	score = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "Score: 0", 112, { 255,0,0 });
 	score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
 
-
+	
 	fin >> hScore;
 	highScore = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "High score: " + hScore, 112, { 255,0,0 });
 	highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * (12 + hScore.length()), SCORE_HEIGHT_CHAR);
