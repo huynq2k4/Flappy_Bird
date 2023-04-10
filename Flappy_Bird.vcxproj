@@ -61,6 +61,9 @@
     <Media Include="asset\sound\get-point.wav" />
     <Media Include="asset\sound\hit.wav" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\score.bin" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

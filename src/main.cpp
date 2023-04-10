@@ -39,7 +39,6 @@ const int SCORE_HEIGHT_CHAR = 28;
 
 
 SDLApp* app;
-
 GameObject* background;
 Bird* flappyBird;
 Ground* ground;
@@ -69,9 +68,8 @@ static int alpha = 255;
 int point = 0;
 
 static string hScore = "0";
-ifstream fin("score.txt");
+ifstream fin("bin/score.bin", ios::binary | ios::in);
 
-//ofstream fout("score.txt");
 
 void HandleEvents() {
 	SDL_Event event;
@@ -79,10 +77,12 @@ void HandleEvents() {
 	while (SDL_PollEvent(&event)) {
 
 		if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
-			int sc; fin >> sc;
+			int sc; 
+			fin.read((char*)&sc, sizeof(sc));
 			if (sc < stoi(hScore)) {
-				ofstream fout("score.txt", ios::trunc);
-				fout << stoi(hScore);
+				int tmphScore = stoi(hScore);
+				ofstream fout("bin/score.bin", ios::binary | ios::out | ios::trunc);
+				fout.write((char*)&tmphScore, sizeof(int));
 			}
 			app->EndAppLoop();
 			
@@ -92,25 +92,25 @@ void HandleEvents() {
 		if (event.key.keysym.sym == SDLK_s) {
 			if (!resetGame && !startGame) {
 				resetGame = true;
-				cout << "Line 95: " << hScore << endl;
+				//cout << "Line 95: " << hScore << endl;
 				flappyBird->SetDefaultStatus(SCREEN_WIDTH / 5, 5 * SCREEN_HEIGHT / 12, 0, 0, 0);
-				cout << "Line 97: " << hScore << endl;
+				//cout << "Line 97: " << hScore << endl;
 				for (int i = 0; i < TOTAL_PIPE + 1; i++) {
 					pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / TOTAL_PIPE, MAX_PIPE_Y, MIN_PIPE_Y, PIPE_DISTANCE);
 					pipe[i]->SetMode();
-					cout << "Line 101: " << hScore << endl;
+					//cout << "Line 101: " << hScore << endl;
 				}
 				alpha = 255;
 				isFlash = false;
 				startGame = false;
-				cout << "Line 106: " << hScore << endl;
+				//cout << "Line 106: " << hScore << endl;
 				point = 0;
 				score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
 				score->ChangeText("Score: 0");
-				cout << "Line 110: " << hScore << endl;
+				//cout << "Line 110: " << hScore << endl;
 				highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * (12 + hScore.length()), SCORE_HEIGHT_CHAR);
 				highScore->ChangeText("High score: " + hScore);
-				cout << "Line 113: " << hScore << endl;
+				//cout << "Line 113: " << hScore << endl;
 			}
 		}
 
@@ -138,10 +138,9 @@ void HandleEvents() {
 		}
 		if (event.key.keysym.sym == SDLK_r) {
 			if (!startGame) {
-				ofstream fout("score.txt", ios::trunc);
-				fout << "0";
+				ofstream fout("bin/score.bin", ios::trunc | ios::binary | ios::out);
 				hScore = "0";
-				cout << "Line 144: " << hScore << endl;
+				fout.write((char*)&hScore, sizeof(int));
 				highScore->ChangeText("High score: 0");
 				highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * 13, SCORE_HEIGHT_CHAR);
 			}
@@ -183,7 +182,6 @@ void HandleRendering() {
 				//fin >> hScore;
 				if (point > stoi(hScore)) {
 					hScore = to_string(point);
-					cout << hScore << endl;
 
 
 
@@ -231,10 +229,8 @@ void HandleRendering() {
 					startGame = false;
 					soundHit->PlaySound(0);
 
-					//fin >> hScore;
 					if (point > stoi(hScore)) {
 						hScore = to_string(point);
-						cout << hScore << endl;
 					}
 					//soundDie->PlaySound(0);
 				}
@@ -303,7 +299,7 @@ void HandleRendering() {
 }
 
 int main(int argc, char* args[]) {
-
+	//ofstream binfout("bin/score.bin", ios::binary);
 	srand((unsigned int)time(NULL));
 
 	//Setup the SDLApp
@@ -331,13 +327,13 @@ int main(int argc, char* args[]) {
 
 	vector<Point> birdCollisionBox;
 
-	birdCollisionBox.push_back({ 714, 575 });
+	birdCollisionBox.push_back({ 714, 550 });
 	birdCollisionBox.push_back({ 714, 382 });
 	birdCollisionBox.push_back({ 655, 77 });
 	birdCollisionBox.push_back({ 470, 0 });
 	birdCollisionBox.push_back({ 319, 108 });
 	birdCollisionBox.push_back({ 139, 312 });
-	birdCollisionBox.push_back({ 139, 575 });
+	birdCollisionBox.push_back({ 139, 550 });
 
 	flappyBird->CreateCollisionShape(birdCollisionBox);
 
@@ -349,8 +345,10 @@ int main(int argc, char* args[]) {
 	score = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "Score: 0", 112, { 255,0,0 });
 	score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
 
-	
-	fin >> hScore;
+	int tmphScore;
+	fin.read((char*)&tmphScore, sizeof(int));
+	//fin >> hScore;
+	hScore = to_string(tmphScore);
 	highScore = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "High score: " + hScore, 112, { 255,0,0 });
 	highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * (12 + hScore.length()), SCORE_HEIGHT_CHAR);
 
