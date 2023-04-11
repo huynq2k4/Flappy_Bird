@@ -1,5 +1,7 @@
 #include "Bird.h"
 
+
+
 void Bird::SetDefaultStatus(double posX, double posY, double angle, double velFly, double velRotate)
 {
 	GetTexturedRectangle().SetPosition(posX, posY);
@@ -103,4 +105,14 @@ SDL_bool Bird::IsColliding(GameObject& obj)
 	/*SDL_bool x2 = CheckCollision(&mRect, mAngle, &tmp, obj.GetAngle());
 	if (x1 == SDL_TRUE || x2 == SDL_TRUE) return SDL_TRUE;*/
 	return CheckCollision2(tmpShape, GetAngle(), center, &tmpRect);
+}
+
+void Bird::SetNumberOfFrames(int numOfFrames)
+{
+	mNumberOfFrames = numOfFrames;
+}
+
+int Bird::GetNumberOfFrames()
+{
+	return mNumberOfFrames;
 }

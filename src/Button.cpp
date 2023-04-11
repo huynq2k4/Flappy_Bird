@@ -4,6 +4,8 @@ Button::Button(SDL_Renderer* renderer, std::string path, int x, int y, int w, in
 {
 	mRenderer = renderer;
 	mButton = new TexturedRectangle(mRenderer, path);
+	mButton->SetPosition(x, y);
+	mButton->SetDimension(w, h);
 	mIsClicking = false;
 	mRectButton.x = x;
 	mRectButton.y = y;
@@ -14,35 +16,38 @@ Button::Button(SDL_Renderer* renderer, std::string path, int x, int y, int w, in
 Button::~Button()
 {
 	mRenderer = nullptr;
-	mButton->~TexturedRectangle();
+	delete mButton;
 }
 
-void Button::HandleButtonClicking(SDL_Event event)
+void Button::HandleMouseDown()
 {
-	if (event.type == SDL_MOUSEBUTTONDOWN) {
-		int x, y;
-		SDL_GetMouseState(&x, &y);
-		if (x >= mRectButton.x && x <= mRectButton.x + mRectButton.w && y >= mRectButton.y && y <= mRectButton.y + mRectButton.h) {
-			mIsClicking = true;
-		}
+	int x, y;
+	SDL_GetMouseState(&x, &y);
+	if (x >= mRectButton.x && x <= mRectButton.x + mRectButton.w && y >= mRectButton.y && y <= mRectButton.y + mRectButton.h) {
+		mIsClicking = true;
 	}
-	else if (event.type == SDL_MOUSEMOTION) {
-		int x, y;
-		SDL_GetMouseState(&x, &y);
-		if (x >= mRectButton.x && x <= mRectButton.x + mRectButton.w && y >= mRectButton.y && y <= mRectButton.y + mRectButton.h) {
-			mButton->SetPosition(mRectButton.x - mRectButton.w / 8, mRectButton.y - mRectButton.h / 8);
-			mButton->SetDimension(5 * mRectButton.w / 4, 5 * mRectButton.h / 4);
-		}
-		else {
-			mButton->SetPosition(mRectButton.x, mRectButton.y);
-			mButton->SetDimension(mRectButton.w, mRectButton.h);
-		}
+}
+
+void Button::HandleMouseOver() {
+	int x, y;
+	SDL_GetMouseState(&x, &y);
+	if (x >= mRectButton.x && x <= mRectButton.x + mRectButton.w && y >= mRectButton.y && y <= mRectButton.y + mRectButton.h) {
+		mButton->SetPosition(mRectButton.x - mRectButton.w / 12, mRectButton.y - mRectButton.h / 12);
+		mButton->SetDimension(7 * mRectButton.w / 6, 7 * mRectButton.h / 6);
+	}
+	else {
+		mButton->SetPosition(mRectButton.x, mRectButton.y);
+		mButton->SetDimension(mRectButton.w, mRectButton.h);
 	}
 }
 
 bool Button::IsClicking()
 {
-	return mIsClicking;
+	if (mIsClicking) {
+		mIsClicking = false;
+		return true;
+	}
+	return false;
 }
 
 void Button::Render()

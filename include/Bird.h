@@ -15,6 +15,7 @@ private:
 	int mSpriteHeight;
 	vector<Point> mCollisionInit;
 	vector<Point> mCollisionShape;
+	int mNumberOfFrames;
 
 	
 public:
@@ -36,6 +37,10 @@ public:
 
 	void ShiftColliders();
 	SDL_bool IsColliding(GameObject& obj);
+
+	void SetNumberOfFrames(int numOfFrames);
+
+	int GetNumberOfFrames();
 
 };
 

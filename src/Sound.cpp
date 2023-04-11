@@ -37,6 +37,7 @@ Music::~Music()
 void Music::PlaySound(int loop)
 {
 	if (mMusic != nullptr) {
+		
 		Mix_PlayMusic(mMusic, loop);
 	}
 }

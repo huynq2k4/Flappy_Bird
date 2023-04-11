@@ -4,12 +4,14 @@
 #include <SDL.h>
 #include "TexturedRectangle.h"
 #include "Bird.h"
+#include "Text.h"
 
 class MainMenu {
 private:
-	
-public:
+	TexturedRectangle mMainMenu;
 
+public:
+	int alpha;
 };
 
 

@@ -13,8 +13,8 @@ public:
 	Button(SDL_Renderer* renderer, std::string path, int x, int y, int w, int h);
 	~Button();
 
-	void HandleButtonClicking(SDL_Event event);
-
+	void HandleMouseDown();
+	void HandleMouseOver();
 	bool IsClicking();
 	void Render();
 };
