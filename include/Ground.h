@@ -4,10 +4,12 @@
 #include "GameObject.h"
 
 class Ground :public GameObject {
-private:
-
 public:
 	using GameObject::GameObject;
+	int mScrollingGround = 0;
+	void Scroll(int speedScrolling);
+
+	void RenderScrolling();
 };
 
 #endif

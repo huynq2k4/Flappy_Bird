@@ -40,24 +40,6 @@ const int SCORE_HEIGHT_CHAR = 28;
 //Ground constant
 const int GROUND_Y = 600;
 
-enum CharacterY {
-	RED_Y = 0,
-	PINK_STRIPE_Y = 520,
-	PINK_BALD_Y = 1061,
-	BROWN_Y = 1647,
-	BLUE_Y = 2250,
-	YELLOW_Y = 2860
-};
-
-enum CharacterWidth {
-	RED_W = 712,
-	PINK_STRIPE_W = 713,
-	PINK_BALD_W = 667,
-	BROWN_W = 760,
-	BLUE_W = 717,
-	YELLOW_W = 716
-};
-
 //Store character Y and width
 const vector<pair<int, int>> CharacterProperties = { {0, 712}, {520, 713}, {1061, 667}, {1647, 760}, {2250, 717}, {2860, 716}, {3492, 0} };
 
@@ -83,10 +65,21 @@ Button* startGame;
 Button* nextLeft;
 Button* nextRight;
 Bird* character;
-GameObject* blackTransition;
 Music* bgMusic;
+TexturedRectangle* blackTransition;
 
-bool isMainMenu = true;
+//Objects in game over
+TexturedRectangle* gameOver;
+TexturedRectangle* scoreBoard;
+TexturedRectangle* newHighScore;
+Text* gameOverScore;
+Text* gameOverHighScore;
+Button* replay;
+Button* home;
+SoundEffect* newRecord;
+
+
+bool isMainMenu = true; //Signal to open main menu
 
 bool isStartingGame = false; //Signal to start game
 
@@ -98,11 +91,16 @@ bool isHoldingKey = false;
 
 bool isPlayingMusic = false;
 
+bool isPlayingNewRecord = false;
+
+bool isHighScore = false;
+
 bool repeatFly = false; //Make sure the bird flaps wing only when it flys (space keydown)
 
 //Global variables to handle screen flickering
 bool isFlash = false; //Signal to flicker the screen (white flash) when the bird collides
-int alphaFlash = 255; //Adjust the transparency of white screen when flashing
+int alphaFlash = SDL_ALPHA_OPAQUE; //Adjust the transparency of white screen when flashing
+int mode = 13;//Adjust the white flash appearing speed
 
 int point = 0; //Store point on gameplay
 
@@ -112,6 +110,13 @@ ifstream fin("bin/score.bin", ios::binary | ios::in); //Open binary file storing
 int numCharacter = 0;
 int numberOfFrame = 4;
 static int frame = 0; //Store frame number to render bird flying
+
+int alphaBlackTransition = 0;
+bool isBlackTransition = false;
+int volumeMusic = MIX_MAX_VOLUME;
+
+int alphaGameOver = 0;
+
 
 
 
@@ -135,10 +140,21 @@ void HandleEvents() {
 			
 		}
 
-		bool isFlying = false; //Check if the bird is flying or not
+		if (event.type == SDL_MOUSEMOTION) {
+			startGame->HandleMouseOver();
+			replay->HandleMouseOver();
+			home->HandleMouseOver();
+		}
+		if (event.type == SDL_MOUSEBUTTONDOWN) {
+			startGame->HandleMouseDown();
+			nextLeft->HandleMouseDown();
+			nextRight->HandleMouseDown();
+			replay->HandleMouseDown();
+			home->HandleMouseDown();
+		}
 
 		//Game reseting process when pressing S key
-		if (event.key.keysym.sym == SDLK_s) {
+		if (event.key.keysym.sym == SDLK_s || replay->IsClicking()) {
 
 			if (!isResetingGame && !isStartingGame) {
 
@@ -152,7 +168,7 @@ void HandleEvents() {
 
 				}
 
-				alphaFlash = 255;
+				alphaFlash = SDL_ALPHA_OPAQUE;
 				isFlash = false;
 				
 				point = 0;
@@ -161,31 +177,65 @@ void HandleEvents() {
 	
 				highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * (12 + hScore.length()), SCORE_HEIGHT_CHAR);
 				highScore->ChangeText("High score: " + hScore);
+				isHighScore = false;
+				isPlayingNewRecord = false;
+				
 
 			}
+			
 		}
+		if (event.key.keysym.sym == SDLK_m || home->IsClicking()) {
+			isPlayingMusic = false;
+			isMainMenu = true;
+			isStartingGame = false;
+			isResetingGame = true;
+			flappyBird->SetDefaultStatus(DEFAULT_BIRD_X, GROUND_Y / 2, 0, 0, 0);
 
+			for (int i = 0; i < TOTAL_PIPE; i++) {
+				pipe[i]->SetStatus(SCREEN_WIDTH + i * SCREEN_WIDTH / (TOTAL_PIPE - 1), MAX_PIPE_Y, MIN_PIPE_Y, PIPE_DISTANCE);
+				pipe[i]->SetMode();
+
+			}
+
+			alphaFlash = SDL_ALPHA_OPAQUE;
+			isFlash = false;
+
+			point = 0;
+			score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
+			score->ChangeText("Score: 0");
+
+			highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * (12 + hScore.length()), SCORE_HEIGHT_CHAR);
+			highScore->ChangeText("High score: " + hScore);
+
+			alphaBlackTransition = 0;
+			isBlackTransition = false;
+			
+			volumeMusic = MIX_MAX_VOLUME;
+			isHighScore = false;
+
+			isPlayingNewRecord = false;
+		}
 		//Handle events when pressing Spacebar
 		if (event.key.keysym.sym == SDLK_SPACE) {
 			if (event.type == SDL_KEYDOWN) {
+				if (!isMainMenu) {
+					//Handle starting game
+					if (!isStartingGame && isResetingGame && alphaBlackTransition == 0) {
+						isStartingGame = true;
+						isResetingGame = false;
+					}
 
-				//Handle starting game
-				if (!isStartingGame && isResetingGame) {
-					isStartingGame = true;
-					isResetingGame = false;
-				}
+					//Handle bird flying
+					if (!isHoldingKey && isStartingGame) {
+						flappyBird->Fly(DEFAULT_SPEED_FLY, DEFAULT_ANGLE);
+						flappyBird->DrawFrame(0, SLOW_DOWN_RENDER_BIRD);
+						flappyBird->ShiftColliders();
+						soundFly->PlaySound(0);
+						frame = 0;
+						isHoldingKey = true;
+						repeatFly = false;
 
-				//Handle bird flying
-				if (!isHoldingKey && isStartingGame && !isMainMenu) {
-					isFlying = true;
-					flappyBird->Fly(DEFAULT_SPEED_FLY, DEFAULT_ANGLE);
-					flappyBird->DrawFrame(0, SLOW_DOWN_RENDER_BIRD);
-					flappyBird->ShiftColliders();
-					soundFly->PlaySound(0);
-					frame = 0;
-					isHoldingKey = true;
-					repeatFly = false;
-
+					}
 				}
 			}
 			else {
@@ -193,6 +243,7 @@ void HandleEvents() {
 			}
 
 		}
+		
 
 		//Reset high score when pressing R key
 		if (event.key.keysym.sym == SDLK_r) {
@@ -204,16 +255,7 @@ void HandleEvents() {
 				highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * 13, SCORE_HEIGHT_CHAR);
 			}
 		}
-		if (event.type == SDL_MOUSEMOTION) {
-			startGame->HandleMouseOver();
-			//nextLeft->HandleMouseOver();
-			//nextRight->HandleMouseOver();
-		}
-		if (event.type == SDL_MOUSEBUTTONDOWN) {
-			startGame->HandleMouseDown();
-			nextLeft->HandleMouseDown();
-			nextRight->HandleMouseDown();
-		}
+		
 		if (event.type == SDLK_LEFT) {
 			nextLeft->HandleMouseDown();
 		}
@@ -229,24 +271,17 @@ void HandleEvents() {
 			else ++numCharacter;
 		}
 		if (startGame->IsClicking()) {
-			isMainMenu = false;
-			isResetingGame = true;
+			isBlackTransition = true;
 		}
+		
 
 	}
 }
 
 void HandleRendering() {
 
-	static int scrollingGround = 0;
-
-	static int mode = 13;//Adjust the white flash appearing speed
-
-	
-
 	if (isMainMenu) {
 		background->Render();
-
 		if (!isPlayingMusic) {
 			bgMusic->PlaySound(-1);
 			isPlayingMusic = true;
@@ -260,15 +295,25 @@ void HandleRendering() {
 		character->Render();
 		startGame->Render();
 
-		scrollingGround -= SPEED_SCROLLING_SCREEN;
-		if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
-		ground->GetTexturedRectangle().SetPosition(scrollingGround, GROUND_Y);
-		ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
-		ground->Render();
-
-		ground->GetTexturedRectangle().SetPosition(scrollingGround + SCREEN_WIDTH, GROUND_Y);
-		ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
-		ground->Render();
+		ground->Scroll(SPEED_SCROLLING_SCREEN);
+		ground->RenderScrolling();
+		if (isBlackTransition) {
+			alphaBlackTransition += 10;
+			volumeMusic -= 5;
+			if (volumeMusic < 0) volumeMusic = 0;
+			
+			
+			if (alphaBlackTransition > SDL_ALPHA_OPAQUE) {
+				alphaBlackTransition = SDL_ALPHA_OPAQUE;
+				isMainMenu = false;
+				isResetingGame = true;
+				bgMusic->StopSound();
+			}
+			blackTransition->SetAlpha(alphaBlackTransition);
+			blackTransition->Render(app->GetRenderer());
+		}
+		bgMusic->SetVolume(volumeMusic);
+		
 
 	}
 	else {
@@ -286,8 +331,20 @@ void HandleRendering() {
 			if (frame / SLOW_DOWN_RENDER_BIRD >= numberOfFrame) {
 				frame = 0;
 			}
-			scrollingGround -= SPEED_SCROLLING_SCREEN;
-			if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
+
+			ground->Scroll(SPEED_SCROLLING_SCREEN);
+			ground->RenderScrolling();
+			if (isBlackTransition) {
+				alphaBlackTransition -= 10;
+				
+				
+				if (alphaBlackTransition < 0) {
+					alphaBlackTransition = 0;
+					isBlackTransition = false;
+				}
+				blackTransition->SetAlpha(alphaBlackTransition);
+				
+			}
 			
 
 		}
@@ -309,6 +366,7 @@ void HandleRendering() {
 
 					if (point > stoi(hScore)) {
 						hScore = to_string(point);
+						isHighScore = true;
 					}
 				}
 				++frame;
@@ -358,13 +416,14 @@ void HandleRendering() {
 
 						if (point > stoi(hScore)) {
 							hScore = to_string(point);
+							isHighScore = true;
 						}
 					}
 
 				}
 
-				scrollingGround -= SPEED_SCROLLING_SCREEN;
-				if (scrollingGround < -SCREEN_WIDTH) scrollingGround = 0;
+				ground->Scroll(SPEED_SCROLLING_SCREEN);
+
 			}
 			else {
 
@@ -372,6 +431,9 @@ void HandleRendering() {
 
 
 				background->Render();
+				for (int i = 0; i < TOTAL_PIPE; i++) {
+					pipe[i]->Render();
+				}
 				if (flappyBird->GetY() < GROUND_Y - 52) {
 					flappyBird->FreeFall(0.5, 0.1);
 
@@ -379,21 +441,52 @@ void HandleRendering() {
 				}
 				else {
 					flappyBird->StopOnGround(GROUND_Y - 52);
+					alphaGameOver += 10;
+					if (alphaGameOver > SDL_ALPHA_OPAQUE) alphaGameOver = SDL_ALPHA_OPAQUE;
 
+					gameOver->SetAlpha(alphaGameOver);
+					scoreBoard->SetAlpha(alphaGameOver);
+					gameOver->Render(app->GetRenderer());
+					scoreBoard->Render(app->GetRenderer());
+					if (alphaGameOver == SDL_ALPHA_OPAQUE) {
+						string p = to_string(point);
+						gameOverScore->ChangeText(p);
+						gameOverScore->SetSize(SCREEN_WIDTH / 2 + 175 - (SCORE_WIDTH_CHAR + 10) * (p.length() - 1), SCREEN_HEIGHT / 2 - 65, (SCORE_WIDTH_CHAR + 10) * p.length(), SCORE_HEIGHT_CHAR + 20);
+						gameOverScore->Render();
+
+						gameOverHighScore->ChangeText(hScore);
+						gameOverHighScore->SetSize(SCREEN_WIDTH / 2 + 175 - (SCORE_WIDTH_CHAR + 10) * (hScore.length() - 1), SCREEN_HEIGHT / 2 + 20, (SCORE_WIDTH_CHAR + 10)* hScore.length(), SCORE_HEIGHT_CHAR + 20);
+						gameOverHighScore->Render();
+					}
+					replay->Render();
+					home->Render();
+					if (isHighScore) {
+						newHighScore->Render(app->GetRenderer());
+						if (!isPlayingNewRecord) {
+							newRecord->PlaySound(0);
+							isPlayingNewRecord = true;
+						}
+
+					}
+						
+					
 				}
-				for (int i = 0; i < TOTAL_PIPE; i++) {
-					pipe[i]->Render();
-				}
+				
 
 			}
 		}
 		
-
+		flappyBird->SetDefaultFrame(0, CharacterProperties[numCharacter].first, CharacterProperties[numCharacter].second, CharacterProperties[numCharacter + 1].first - CharacterProperties[numCharacter].first);
+		flappyBird->DrawFrame(frame, SLOW_DOWN_RENDER_BIRD);
+		flappyBird->Render();
+		ground->RenderScrolling();
+		score->Render();
+		highScore->Render();
 		if (!isResetingGame && !isStartingGame && !isFlash) {
 
 			flash->GetTexturedRectangle().SetAlpha(alphaFlash);
 
-			if (alphaFlash >= 255) {
+			if (alphaFlash >= SDL_ALPHA_OPAQUE) {
 				mode = -13;
 			}
 			alphaFlash += mode;
@@ -404,37 +497,10 @@ void HandleRendering() {
 
 			}
 		}
-		flappyBird->SetDefaultFrame(0, CharacterProperties[numCharacter].first, CharacterProperties[numCharacter].second, CharacterProperties[numCharacter + 1].first - CharacterProperties[numCharacter].first);
-		//character->DrawFrame(numCharacter, 4);
-		flappyBird->DrawFrame(frame, SLOW_DOWN_RENDER_BIRD);
-		flappyBird->Render();
-
-		ground->GetTexturedRectangle().SetPosition(scrollingGround, GROUND_Y);
-		ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
-		ground->Render();
-
-		ground->GetTexturedRectangle().SetPosition(scrollingGround + SCREEN_WIDTH, GROUND_Y);
-		ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
-		ground->Render();
-
-		score->Render();
-		highScore->Render();
+		
+		blackTransition->Render(app->GetRenderer());
 	}
-
-
 	
-
-	
-
-	
-
-
-	
-
-	
-
-	
-
 
 
 }
@@ -472,6 +538,8 @@ int main(int argc, char* args[]) {
 
 	//Initialize ground (base)
 	ground = new Ground(app->GetRenderer(), "asset/image/base.png");
+	ground->GetTexturedRectangle().SetDimension(SCREEN_WIDTH, SCREEN_HEIGHT / 6);
+	ground->GetTexturedRectangle().SetPosition(0, GROUND_Y);
 
 	//Initialize pipes
 	for (int i = 0; i < TOTAL_PIPE; i++) {
@@ -486,14 +554,14 @@ int main(int argc, char* args[]) {
 	flash->GetTexturedRectangle().SetDimension(SCREEN_WIDTH + 300, SCREEN_HEIGHT + 300);
 
 	//Initialize gameplay score text
-	score = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "Score: 0", 112, { 255,0,0 });
+	score = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "Score: 0", 112, { 254,0,0 });
 	score->SetSize(SCORE_X, SCORE_Y, SCORE_WIDTH_CHAR * 8, SCORE_HEIGHT_CHAR);
 
 	//Initialize high score text
 	int tmphScore;
 	fin.read((char*)&tmphScore, sizeof(int));
 	hScore = to_string(tmphScore);
-	highScore = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "High score: " + hScore, 112, { 255,0,0 });
+	highScore = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "High score: " + hScore, 112, { 254,0,0 });
 	highScore->SetSize(SCORE_X, SCORE_Y + SCORE_HEIGHT_CHAR + 2, SCORE_WIDTH_CHAR * (12 + hScore.length()), SCORE_HEIGHT_CHAR);
 
 	//Initialize sound
@@ -503,6 +571,7 @@ int main(int argc, char* args[]) {
 	soundHit = new SoundEffect("asset/sound/hit.wav");
 
 	bgMusic = new Music("asset/sound/Flappy Bird.wav");
+	bgMusic->SetVolume(128);
 	
 	
 
@@ -518,6 +587,33 @@ int main(int argc, char* args[]) {
 	character->GetTexturedRectangle().SetDimension(108, 91);
 	character->GetTexturedRectangle().SetPosition(SCREEN_WIDTH / 2 - 54, SCREEN_HEIGHT / 2 - 40);
 	character->SetDefaultFrame(0, CharacterProperties[0].first, CharacterProperties[0].second, CharacterProperties[1].first);
+
+	blackTransition = new TexturedRectangle(app->GetRenderer(), "asset/image/black.png");
+	blackTransition->SetPosition(-50, -50);
+	blackTransition->SetDimension(SCREEN_WIDTH + 300, SCREEN_HEIGHT + 300);
+
+	gameOver = new TexturedRectangle(app->GetRenderer(), "asset/image/gameOver.png");
+	gameOver->SetPosition(SCREEN_WIDTH / 3, SCREEN_HEIGHT / 8);
+	gameOver->SetDimension(SCREEN_WIDTH / 3, SCREEN_HEIGHT / 8);
+
+	scoreBoard = new TexturedRectangle(app->GetRenderer(), "asset/image/scoreboard.png");
+	scoreBoard->SetPosition(SCREEN_WIDTH / 3 - 30, SCREEN_HEIGHT / 3);
+	scoreBoard->SetDimension(SCREEN_WIDTH / 3 + 60, SCREEN_HEIGHT / 3 - 30);
+
+	gameOverScore = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "0", 200, { 34, 139, 34 });
+	gameOverScore->SetSize(SCREEN_WIDTH / 2 + 175, SCREEN_HEIGHT / 2 - 65, SCORE_WIDTH_CHAR + 10, SCORE_HEIGHT_CHAR + 20);
+
+	gameOverHighScore = new Text(app->GetRenderer(), "asset/font/Flappy-Bird.ttf", "0", 200, { 34, 139, 34 });
+	gameOverHighScore->SetSize(SCREEN_WIDTH / 2 + 175, SCREEN_HEIGHT / 2 + 20, SCORE_WIDTH_CHAR + 10, SCORE_HEIGHT_CHAR + 20);
+	
+	replay = new Button(app->GetRenderer(), "asset/image/replay.png", SCREEN_WIDTH / 2 - 200, 2 * SCREEN_HEIGHT / 3 + 15, 150, 75);
+	home = new Button(app->GetRenderer(), "asset/image/home.png", SCREEN_WIDTH / 2 + 60, 2 * SCREEN_HEIGHT / 3 + 15, 150, 75);
+
+	newHighScore = new TexturedRectangle(app->GetRenderer(), "asset/image/newHighScore.png");
+	newHighScore->SetPosition(SCREEN_WIDTH / 2 + 62, SCREEN_HEIGHT / 2 - 15);
+	newHighScore->SetDimension(54, 24);
+
+	newRecord = new SoundEffect("asset/sound/new-record.wav");
 
 	//Handle events and rendering
 	app->SetEventCallback(HandleEvents);
@@ -539,6 +635,21 @@ int main(int argc, char* args[]) {
 	delete soundFly;
 	delete soundGetPoint;
 	delete soundHit;
+	delete bgMusic;
+	delete logo;
+	delete startGame;
+	delete nextLeft;
+	delete nextRight;
+	delete character;
+	delete blackTransition;
+	delete gameOver;
+	delete scoreBoard;
+	delete gameOverScore;
+	delete gameOverHighScore;
+	delete replay;
+	delete home;
+	delete newHighScore;
+	delete newRecord;
 	delete app;
 
 	return 0;

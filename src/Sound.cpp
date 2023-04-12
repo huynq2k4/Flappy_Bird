@@ -18,6 +18,11 @@ void SoundEffect::PlaySound(int loop)
 	}
 }
 
+void SoundEffect::SetVolume()
+{
+	Mix_VolumeChunk(mSoundEffect, MIX_MAX_VOLUME);
+}
+
 void SoundEffect::StopSound()
 {
 	Mix_HaltChannel(-1);
@@ -45,6 +50,11 @@ void Music::PlaySound(int loop)
 void Music::PauseSound()
 {
 	Mix_PauseMusic();
+}
+
+void Music::SetVolume(int volume)
+{
+	Mix_VolumeMusic(volume);
 }
 
 void Music::StopSound()
