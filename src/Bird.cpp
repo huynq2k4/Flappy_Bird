@@ -61,10 +61,17 @@ void Bird::CreateCollisionShape(vector<Point> collisionShape)
 	/*for (int i = 0; i < collisionShape.size(); i++) {
 		mCollisionShape.push_back(collisionShape[i]);
 	}*/
-	for (int i = 0; i < collisionShape.size(); i++) {
+	vector<Point> tmp;
+	/*for (int i = 0; i < collisionShape.size(); i++) {
 		mCollisionInit.push_back({ collisionShape[i].x * GetTexturedRectangle().GetWidth() / (1.0 * mSpriteWidth), collisionShape[i].y * GetTexturedRectangle().GetHeight() / (1.0 * mSpriteHeight) });
 		mCollisionShape.push_back({ collisionShape[i].x * GetTexturedRectangle().GetWidth() / (1.0 * mSpriteWidth), collisionShape[i].y * GetTexturedRectangle().GetHeight() / (1.0 * mSpriteHeight) });
+	}*/
+	for (int i = 0; i < collisionShape.size(); i++) {
+		tmp.push_back({ collisionShape[i].x * GetTexturedRectangle().GetWidth() / (1.0 * mSpriteWidth), collisionShape[i].y * GetTexturedRectangle().GetHeight() / (1.0 * mSpriteHeight) });
+		//tmp.push_back({ collisionShape[i].x * GetTexturedRectangle().GetWidth() / (1.0 * mSpriteWidth), collisionShape[i].y * GetTexturedRectangle().GetHeight() / (1.0 * mSpriteHeight) });
 	}
+	mCollisionInit = tmp;
+	mCollisionShape = tmp;
 	//mCollisionShape = collisionShape;
 }
 

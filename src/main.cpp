@@ -10,6 +10,8 @@
 #include "Button.h"
 #include <vector>
 #include <fstream>
+#include <random>
+#include <chrono>
 
 //Screen constant
 const int SCREEN_HEIGHT = 720;
@@ -66,7 +68,12 @@ Button* nextLeft;
 Button* nextRight;
 Bird* character;
 Music* bgMusic;
+Button* setting;
+TexturedRectangle* settingBoard;
+Button* musicOnOff;
+Button* soundOnOff;
 TexturedRectangle* blackTransition;
+
 
 //Objects in game over
 TexturedRectangle* gameOver;
@@ -77,6 +84,9 @@ Text* gameOverHighScore;
 Button* replay;
 Button* home;
 SoundEffect* newRecord;
+
+
+
 
 
 bool isMainMenu = true; //Signal to open main menu
@@ -94,6 +104,8 @@ bool isPlayingMusic = false;
 bool isPlayingNewRecord = false;
 
 bool isHighScore = false;
+
+bool isSetting = false;
 
 bool repeatFly = false; //Make sure the bird flaps wing only when it flys (space keydown)
 
@@ -125,7 +137,7 @@ void HandleEvents() {
 
 	while (SDL_PollEvent(&event)) {
 
-		if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
+		if (event.type == SDL_QUIT) {
 
 			//Store high score before closing game
 			int sc; 
@@ -144,6 +156,7 @@ void HandleEvents() {
 			startGame->HandleMouseOver();
 			replay->HandleMouseOver();
 			home->HandleMouseOver();
+			//setting->HandleMouseOver();
 		}
 		if (event.type == SDL_MOUSEBUTTONDOWN) {
 			startGame->HandleMouseDown();
@@ -151,6 +164,9 @@ void HandleEvents() {
 			nextRight->HandleMouseDown();
 			replay->HandleMouseDown();
 			home->HandleMouseDown();
+			setting->HandleMouseDown();
+			soundOnOff->HandleMouseDown();
+			musicOnOff->HandleMouseDown();
 		}
 
 		//Game reseting process when pressing S key
@@ -189,6 +205,7 @@ void HandleEvents() {
 			isMainMenu = true;
 			isStartingGame = false;
 			isResetingGame = true;
+			isSetting = false;
 			flappyBird->SetDefaultStatus(DEFAULT_BIRD_X, GROUND_Y / 2, 0, 0, 0);
 
 			for (int i = 0; i < TOTAL_PIPE; i++) {
@@ -196,7 +213,7 @@ void HandleEvents() {
 				pipe[i]->SetMode();
 
 			}
-
+			volumeMusic = MIX_MAX_VOLUME;
 			alphaFlash = SDL_ALPHA_OPAQUE;
 			isFlash = false;
 
@@ -210,7 +227,7 @@ void HandleEvents() {
 			alphaBlackTransition = 0;
 			isBlackTransition = false;
 			
-			volumeMusic = MIX_MAX_VOLUME;
+			//volumeMusic = MIX_MAX_VOLUME;
 			isHighScore = false;
 
 			isPlayingNewRecord = false;
@@ -272,6 +289,119 @@ void HandleEvents() {
 		}
 		if (startGame->IsClicking()) {
 			isBlackTransition = true;
+			//Create shape to check collision for bird
+			vector<Point> birdCollisionBox;
+			switch (numCharacter) {
+			case 0:
+			{
+				birdCollisionBox.push_back({ 708, 294 });
+				birdCollisionBox.push_back({ 667, 134 });
+				birdCollisionBox.push_back({ 467, 74 });
+				birdCollisionBox.push_back({ 262, 133 });
+				birdCollisionBox.push_back({ 145, 333 });
+				birdCollisionBox.push_back({ 273, 485 });
+				birdCollisionBox.push_back({ 577, 485 });
+				break;
+			}
+			case 1:
+			{
+				birdCollisionBox.push_back({ 707, 345 });
+				birdCollisionBox.push_back({ 657, 110 });
+				birdCollisionBox.push_back({ 426, 0 });
+				birdCollisionBox.push_back({ 218, 78 });
+				birdCollisionBox.push_back({ 151, 201 });
+				birdCollisionBox.push_back({ 181, 430 });
+				birdCollisionBox.push_back({ 451, 430 });
+				break;
+			}
+			case 2:
+			{
+				birdCollisionBox.push_back({ 662, 407 });
+				birdCollisionBox.push_back({ 590, 147 });
+				birdCollisionBox.push_back({ 398, 67 });
+				birdCollisionBox.push_back({ 247, 113 });
+				birdCollisionBox.push_back({ 114, 291 });
+				birdCollisionBox.push_back({ 182, 448 });
+				birdCollisionBox.push_back({ 389, 491 });
+				break;
+			}
+			case 3:
+			{
+				birdCollisionBox.push_back({ 755, 340 });
+				birdCollisionBox.push_back({ 570, 0 });
+				birdCollisionBox.push_back({ 310, 0 });
+				birdCollisionBox.push_back({ 161, 297 });
+				birdCollisionBox.push_back({ 211, 467 });
+				birdCollisionBox.push_back({ 418, 523 });
+				birdCollisionBox.push_back({ 678, 533 });
+				break;
+			}
+			case 4:
+			{
+				birdCollisionBox.push_back({ 714, 550 });
+				birdCollisionBox.push_back({ 714, 382 });
+				birdCollisionBox.push_back({ 655, 77 });
+				birdCollisionBox.push_back({ 470, 0 });
+				birdCollisionBox.push_back({ 319, 108 });
+				birdCollisionBox.push_back({ 139, 312 });
+				birdCollisionBox.push_back({ 139, 550 });
+				break;
+			}
+			default:
+			{
+				birdCollisionBox.push_back({ 712, 428 });
+				birdCollisionBox.push_back({ 657, 201 });
+				birdCollisionBox.push_back({ 428, 92 });
+				birdCollisionBox.push_back({ 248, 160 });
+				birdCollisionBox.push_back({ 156, 284 });
+				birdCollisionBox.push_back({ 221, 490 });
+				birdCollisionBox.push_back({ 412, 519 });
+				break;
+			}
+			}
+			
+			flappyBird->CreateCollisionShape(birdCollisionBox);
+		}
+		if (setting->IsClicking()) {
+			if (isSetting) {
+				isSetting = false;
+			}
+			else isSetting = true;
+		}
+		if (soundOnOff->IsClicking()) {
+			int volume = 0;
+			if (soundOnOff->GetClip().x == 0) {
+				soundOnOff->SetClip(432, 0, 432, 171);
+				volume = 0;
+			}
+			else {
+				soundOnOff->SetClip(0, 0, 432, 171);
+				volume = MIX_MAX_VOLUME;
+			}
+			newRecord->SetVolume(volume);
+			soundFly->SetVolume(volume);
+			soundGetPoint->SetVolume(volume);
+			soundHit->SetVolume(volume);
+			soundDie->SetVolume(volume);
+		}
+		if (musicOnOff->IsClicking()) {
+			if (musicOnOff->GetClip().x == 0) {
+				musicOnOff->SetClip(432, 0, 432, 171);
+				//volumeMusic = 0;
+				bgMusic->PauseSound();
+			}
+			else {
+				musicOnOff->SetClip(0, 0, 432, 171);
+				//volumeMusic = MIX_MAX_VOLUME;
+				if (isPlayingMusic) {
+					bgMusic->ResumeSound();
+				}
+				//else {
+				//	
+				//	bgMusic->PlaySound(-1);
+				//	isPlayingMusic = true;
+				//}
+			}
 		}
 		
 
@@ -282,7 +412,7 @@ void HandleRendering() {
 
 	if (isMainMenu) {
 		background->Render();
-		if (!isPlayingMusic) {
+		if (!isPlayingMusic && musicOnOff->GetClip().x == 0) {
 			bgMusic->PlaySound(-1);
 			isPlayingMusic = true;
 		}
@@ -294,9 +424,17 @@ void HandleRendering() {
 		nextRight->Render();
 		character->Render();
 		startGame->Render();
+		setting->Render();
+
+		if (isSetting) {
+			settingBoard->Render(app->GetRenderer());
+			soundOnOff->Render();
+			musicOnOff->Render();
+		}
 
 		ground->Scroll(SPEED_SCROLLING_SCREEN);
 		ground->RenderScrolling();
+
 		if (isBlackTransition) {
 			alphaBlackTransition += 10;
 			volumeMusic -= 5;
@@ -313,6 +451,7 @@ void HandleRendering() {
 			blackTransition->Render(app->GetRenderer());
 		}
 		bgMusic->SetVolume(volumeMusic);
+		
 		
 
 	}
@@ -353,8 +492,6 @@ void HandleRendering() {
 			if (isStartingGame) {
 
 				background->Render();
-
-				srand((unsigned int)time(NULL));
 
 				if (flappyBird->GetY() < GROUND_Y - 52) {
 					flappyBird->FreeFall(0.5, 0.1);
@@ -497,18 +634,16 @@ void HandleRendering() {
 
 			}
 		}
-		
+		//setting->Render();
 		blackTransition->Render(app->GetRenderer());
 	}
+	
 	
 
 
 }
 
 int main(int argc, char* args[]) {
-
-	//Initialize random number generator based on runtime value
-	srand((unsigned int)time(NULL));
 
 	//Setup the SDLApp
 	const char* title = "Flappy Bird";
@@ -525,16 +660,7 @@ int main(int argc, char* args[]) {
 	flappyBird->GetTexturedRectangle().SetDimension(72, 61);
 	flappyBird->SetDefaultFrame(0, 0, BIRD_WIDTH / numberOfFrame, BIRD_HEIGHT);
 
-	//Create shape to check collision for bird
-	vector<Point> birdCollisionBox;
-	birdCollisionBox.push_back({ 714, 550 });
-	birdCollisionBox.push_back({ 714, 382 });
-	birdCollisionBox.push_back({ 655, 77 });
-	birdCollisionBox.push_back({ 470, 0 });
-	birdCollisionBox.push_back({ 319, 108 });
-	birdCollisionBox.push_back({ 139, 312 });
-	birdCollisionBox.push_back({ 139, 550 });
-	flappyBird->CreateCollisionShape(birdCollisionBox);
+	
 
 	//Initialize ground (base)
 	ground = new Ground(app->GetRenderer(), "asset/image/base.png");
@@ -573,14 +699,14 @@ int main(int argc, char* args[]) {
 	bgMusic = new Music("asset/sound/Flappy Bird.wav");
 	bgMusic->SetVolume(128);
 	
-	
-
 	logo = new TexturedRectangle(app->GetRenderer(), "asset/image/logo.png");
 	logo->SetPosition(SCREEN_WIDTH / 4, SCREEN_HEIGHT / 8);
 	logo->SetDimension(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 5);
 
 	startGame = new Button(app->GetRenderer(), "asset/image/start.png", SCREEN_WIDTH / 2 - 75, 2 * SCREEN_HEIGHT / 3 + 15, 150, 75);
+
 	nextLeft = new Button(app->GetRenderer(), "asset/image/nextLeft.png", SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 2 - 10, 20, 25);
+
 	nextRight = new Button(app->GetRenderer(), "asset/image/nextRight.png", SCREEN_WIDTH / 2 + 130, SCREEN_HEIGHT / 2 - 10, 20, 25);
 
 	character = new Bird(app->GetRenderer(), "asset/image/flappy-bird.png");
@@ -607,6 +733,7 @@ int main(int argc, char* args[]) {
 	gameOverHighScore->SetSize(SCREEN_WIDTH / 2 + 175, SCREEN_HEIGHT / 2 + 20, SCORE_WIDTH_CHAR + 10, SCORE_HEIGHT_CHAR + 20);
 	
 	replay = new Button(app->GetRenderer(), "asset/image/replay.png", SCREEN_WIDTH / 2 - 200, 2 * SCREEN_HEIGHT / 3 + 15, 150, 75);
+
 	home = new Button(app->GetRenderer(), "asset/image/home.png", SCREEN_WIDTH / 2 + 60, 2 * SCREEN_HEIGHT / 3 + 15, 150, 75);
 
 	newHighScore = new TexturedRectangle(app->GetRenderer(), "asset/image/newHighScore.png");
@@ -614,6 +741,18 @@ int main(int argc, char* args[]) {
 	newHighScore->SetDimension(54, 24);
 
 	newRecord = new SoundEffect("asset/sound/new-record.wav");
+
+	setting = new Button(app->GetRenderer(), "asset/image/setting.png", 10, 10, 40, 40);
+
+	settingBoard = new TexturedRectangle(app->GetRenderer(), "asset/image/setting-board.png");
+	settingBoard->SetPosition(60, 10);
+	settingBoard->SetDimension(200, 100);
+
+	soundOnOff = new Button(app->GetRenderer(), "asset/image/on-off.png", 170, 25, 80, 30);
+	soundOnOff->SetClip(0, 0, 432, 171);
+
+	musicOnOff = new Button(app->GetRenderer(), "asset/image/on-off.png", 170, 65, 80, 30);
+	musicOnOff->SetClip(0, 0, 432, 171);
 
 	//Handle events and rendering
 	app->SetEventCallback(HandleEvents);
@@ -650,9 +789,8 @@ int main(int argc, char* args[]) {
 	delete home;
 	delete newHighScore;
 	delete newRecord;
+	delete setting;
 	delete app;
 
 	return 0;
 }
-
-

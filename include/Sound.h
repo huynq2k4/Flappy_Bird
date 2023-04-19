@@ -13,7 +13,7 @@ public:
 	SoundEffect(std::string path);
 	~SoundEffect();
 	void PlaySound(int loop);
-	void SetVolume();
+	void SetVolume(int volume);
 	void StopSound();
 };
 
@@ -25,6 +25,7 @@ public:
 	~Music();
 	void PlaySound(int loop);
 	void PauseSound();
+	void ResumeSound();
 	void SetVolume(int volume);
 	void StopSound();
 };

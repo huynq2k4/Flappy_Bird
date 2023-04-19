@@ -22,7 +22,7 @@ private:
 
 	SDL_RendererFlip mFlip;
 
-	
+	int mAlpha;
 
 
 
@@ -77,10 +77,14 @@ public:
 
 	void SetAlpha(int alpha);
 
+	int GetAlpha();
+
 	//Get rectangle from texture
 	inline SDL_Rect GetRect() { return mRect; }
 
-	
+	int FadeIn(int millisecond);
+
+	int FadeOut(int millisecond);
 
 	
 

@@ -1,4 +1,5 @@
 #include "Pipe.h"
+#include <chrono>
 #include <random>
 #include "CheckCollision.h"
 
@@ -55,8 +56,8 @@ void Pipe::SetDimension(int w, int h) {
 
 void Pipe::SetStatus(int posX, int posYMax, int posYMin, int distance)
 {
-	
-	mPipeLow->GetTexturedRectangle().SetPosition(posX, rand() % (posYMax - posYMin + 1) + posYMin);
+	mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+	mPipeLow->GetTexturedRectangle().SetPosition(posX, rng() % (posYMax - posYMin + 1) + posYMin);
 	mPipeHigh->GetTexturedRectangle().SetPosition(posX, mPipeLow->GetY() - distance - mSpriteHeight);
 	mGetScore.x = mPipeLow->GetX() + mSpriteWidth;
 	mGetScore.y = mPipeLow->GetY() - distance;
@@ -103,7 +104,8 @@ int Pipe::GetPipeX()
 
 void Pipe::SetMode()
 {
-	int tmp = rand() % 2;
+	mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+	int tmp = rng() % 2;
 	if (tmp == 0) mIsMoving = true;
 	else mIsMoving = false;
 }

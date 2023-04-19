@@ -9,9 +9,14 @@ private:
 	SDL_Renderer* mRenderer;
 	bool mIsClicking;
 	SDL_Rect mRectButton;
+	SDL_Rect mClip;
 public:
 	Button(SDL_Renderer* renderer, std::string path, int x, int y, int w, int h);
 	~Button();
+
+	void SetClip(int x, int y, int w, int h);
+
+	SDL_Rect GetClip();
 
 	void HandleMouseDown();
 	void HandleMouseOver();

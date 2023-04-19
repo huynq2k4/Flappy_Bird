@@ -11,6 +11,7 @@ Button::Button(SDL_Renderer* renderer, std::string path, int x, int y, int w, in
 	mRectButton.y = y;
 	mRectButton.w = w;
 	mRectButton.h = h;
+
 }
 
 Button::~Button()
@@ -18,6 +19,24 @@ Button::~Button()
 	mRenderer = nullptr;
 	delete mButton;
 }
+
+void Button::SetClip(int x, int y, int w, int h)
+{
+	mClip.x = x;
+	mClip.y = y;
+	mClip.w = w;
+	mClip.h = h;
+	mButton->SetClip(&mClip);
+}
+
+SDL_Rect Button::GetClip()
+{
+	return mClip;
+}
+
+
+
+
 
 void Button::HandleMouseDown()
 {

@@ -24,6 +24,7 @@ TexturedRectangle::TexturedRectangle(SDL_Renderer* renderer, std::string path)
 	mAngle = 0;
 	mClip = NULL;
 	mFlip = SDL_FLIP_NONE;
+	mAlpha = SDL_ALPHA_OPAQUE;
 }
 
 TexturedRectangle::TexturedRectangle(SDL_Renderer* renderer, TTF_Font* font, std::string text, SDL_Color color)
@@ -48,6 +49,7 @@ TexturedRectangle::TexturedRectangle(SDL_Renderer* renderer, TTF_Font* font, std
 	mAngle = 0;
 	mClip = NULL;
 	mFlip = SDL_FLIP_NONE;
+	mAlpha = SDL_ALPHA_OPAQUE;
 }
 
 //Destructor
@@ -136,6 +138,32 @@ SDL_bool TexturedRectangle::IsColliding(TexturedRectangle& obj)
 void TexturedRectangle::SetAlpha(int alpha)
 {
 	SDL_SetTextureAlphaMod(mTexture, alpha);
+}
+
+int TexturedRectangle::GetAlpha()
+{
+	return mAlpha;
+}
+
+int TexturedRectangle::FadeIn(int millisecond)
+{
+	if (mAlpha <= 255) mAlpha += (255 / (millisecond / 16));
+	else {
+		return -1;
+		mAlpha = 255;
+	}
+	return mAlpha;
+}
+
+int TexturedRectangle::FadeOut(int millisecond)
+{
+	if (mAlpha >= 0) mAlpha -= (255 / (millisecond / 16));
+	else
+	{
+		return -1;
+		mAlpha = 0;
+	}
+	return mAlpha;
 }
 
 
